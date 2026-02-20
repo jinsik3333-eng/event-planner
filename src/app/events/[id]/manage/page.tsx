@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useParams } from 'next/navigation'
 import { MapPin, Clock, Users, Share2, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,20 +11,17 @@ import { Container } from '@/components/layout/container'
 import { BottomTab } from '@/components/navigation/bottom-tab'
 import { createCompleteMockEvent } from '@/lib/mock-data'
 
-// 주최자용 이벤트 관리 페이지
-interface ManagePageProps {
-  params: {
-    id: string
-  }
-}
-
-export default function ManagePage({ params }: ManagePageProps) {
+export default function ManagePage() {
+  const params = useParams()
   const [activeTab, setActiveTab] = useState('members')
 
   // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
-  const mockData = createCompleteMockEvent()
+  // params.id를 seed로 사용하여 같은 id에서는 항상 같은 데이터 생성
+  const eventId = Array.isArray(params.id) ? params.id[0] : params.id
+  const seed = parseInt(eventId) || 1
+  const mockData = createCompleteMockEvent(undefined, seed)
   const event = {
-    id: params.id,
+    id: eventId,
     title: mockData.event.title,
     date: mockData.event.date,
     location: mockData.event.location,

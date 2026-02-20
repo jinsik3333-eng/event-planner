@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useParams } from 'next/navigation'
 import { MapPin, Clock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,14 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
 import { mockEvent } from '@/lib/mock-data'
 
-// 참여자용 초대 링크 진입 페이지
-interface JoinPageProps {
-  params: {
-    inviteCode: string
-  }
-}
-
-export default function JoinPage({ params }: JoinPageProps) {
+export default function JoinPage() {
+  const params = useParams()
   const [guestName, setGuestName] = useState('')
   const [attendance, setAttendance] = useState<
     'attending' | 'absent' | 'pending' | null
@@ -23,7 +18,14 @@ export default function JoinPage({ params }: JoinPageProps) {
   const [step, setStep] = useState<'info' | 'response' | 'confirm'>('info')
 
   // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
-  const baseEvent = mockEvent()
+  // inviteCode를 seed로 사용하여 같은 code에서는 항상 같은 데이터 생성
+  const inviteCode = Array.isArray(params.inviteCode)
+    ? params.inviteCode[0]
+    : params.inviteCode
+  const seed = inviteCode
+    .split('')
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const baseEvent = mockEvent(undefined, seed)
   const event = {
     id: baseEvent.id,
     title: baseEvent.title,

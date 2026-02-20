@@ -6,13 +6,29 @@ import { Button } from '@/components/ui/button'
 import { EventCard } from '@/components/event/event-card'
 import { BottomTab } from '@/components/navigation/bottom-tab'
 import { Container } from '@/components/layout/container'
-import { createMockEvents } from '@/lib/mock-data'
 
 // 주최자 대시보드 페이지
 export default function DashboardPage() {
   // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
-  const events = createMockEvents(3)
-  const myEvents = events.map(event => ({
+  // 고정 seed를 사용하여 hydration 문제 방지
+  const events = Array.from({ length: 3 }, (_, i) => {
+    const seed = 1000 + i
+    return {
+      id: `event-${i + 1}`,
+      title: `모임_${seed % 10000}`,
+      description: '즐거운 모임입니다.',
+      hostId: `host-${i + 1}`,
+      date: new Date(Date.now() + (i + 7) * 24 * 60 * 60 * 1000),
+      location: '서울시 강남구',
+      fee: (i % 5) * 10000,
+      maxAttendees: 20 + i * 5,
+      status: i === 0 ? 'RECRUITING' : i === 1 ? 'RECRUITING' : 'ENDED',
+      inviteCode: `CODE${i + 1}`,
+      image: 'https://via.placeholder.com/400x200?text=Event',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+  }).map(event => ({
     id: event.id,
     title: event.title,
     image: event.image,
@@ -24,6 +40,7 @@ export default function DashboardPage() {
     status: event.status,
     isNew: false,
   }))
+  const myEvents = events
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">

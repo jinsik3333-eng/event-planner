@@ -5,12 +5,29 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Container } from '@/components/layout/container'
 
-import { createMockEvents } from '@/lib/mock-data'
-
 // 관리자 대시보드 (데스크톱 전용)
 export default function AdminPage() {
   // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
-  const mockEvents = createMockEvents(5)
+  // 고정 seed를 사용하여 hydration 문제 방지
+  const mockEvents = Array.from({ length: 5 }, (_, i) => {
+    const seed = 2000 + i
+    return {
+      id: `admin-event-${i + 1}`,
+      title: `모임_${seed % 10000}`,
+      description: '즐거운 모임입니다.',
+      hostId: `host-${i + 1}`,
+      date: new Date(Date.now() + (i + 7) * 24 * 60 * 60 * 1000),
+      location: '서울시 강남구',
+      fee: (i % 5) * 10000,
+      maxAttendees: 20 + i * 5,
+      status: 'RECRUITING',
+      inviteCode: `CODE${i + 1}`,
+      image: 'https://via.placeholder.com/400x200?text=Event',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+  })
+
   const stats = {
     totalEvents: 345,
     activeUsers: 1200,
@@ -21,14 +38,14 @@ export default function AdminPage() {
   const recentEvents = mockEvents.map((event, idx) => ({
     id: event.id,
     title: event.title,
-    attendees: Math.floor(Math.random() * 30) + 5,
+    attendees: 5 + idx * 4,
     maxAttendees: event.maxAttendees || 50,
-    revenue: event.fee * (Math.floor(Math.random() * 30) + 5),
+    revenue: event.fee * (5 + idx * 4),
     status: idx % 2 === 0 ? 'RECRUITING' : 'CONFIRMED',
   }))
 
   return (
-    <div className="hidden min-h-screen bg-gray-100 md:flex">
+    <div className="hidden min-h-screen w-full !max-w-none bg-gray-100 md:flex">
       {/* 왼쪽 사이드바 */}
       <div className="flex w-64 flex-col bg-gray-900 text-white">
         <div className="border-b border-gray-800 p-6">
