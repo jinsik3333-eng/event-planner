@@ -7,16 +7,19 @@
 ## 1️⃣ 코딩 표준 (Code Standards)
 
 ### TypeScript 사용
+
 - **모든 파일**: `.ts`, `.tsx` 확장자 사용
 - **타입 정의**: 항상 명시적 타입 정의 필수
 - **any 타입**: 금지 ❌
 - **인터페이스**: 비즈니스 로직의 주요 타입은 반드시 인터페이스로 정의
 
 ### 들여쓰기
+
 - **스페이스**: 2칸 (탭 금지)
 - **Prettier**: 자동 포맷팅 필수
 
 ### 코드 품질
+
 - **ESLint**: 모든 파일이 ESLint 통과 필수
 - **Prettier**: 포맷팅 검사 필수
 - **TypeScript**: 타입 체크 필수 (`npm run typecheck`)
@@ -54,18 +57,21 @@ docs/
 ## 3️⃣ 네이밍 규칙 (Naming Conventions)
 
 ### 파일/폴더
+
 - **폴더**: `kebab-case` (예: `event-planner`, `bottom-tab`)
 - **컴포넌트**: `PascalCase` (예: `EventCard.tsx`)
 - **유틸리티**: `camelCase` (예: `formatDate.ts`)
 - **타입/인터페이스**: `PascalCase` (예: `Event.ts`, `IEventDTO.ts`)
 
 ### 변수/함수
+
 - **변수**: `camelCase` (예: `eventName`, `isLoading`)
 - **상수**: `UPPER_SNAKE_CASE` (예: `MAX_EVENT_NAME_LENGTH`)
 - **함수**: `camelCase` (예: `handleSubmit`, `calculateTotal`)
 - **boolean 변수**: `is/has` 접두사 (예: `isOpen`, `hasError`)
 
 ### CSS 클래스
+
 - **Tailwind**: `kebab-case` (Tailwind에서 자동 처리)
 - **사용자정의**: `kebab-case` (예: `event-card-header`)
 
@@ -74,6 +80,7 @@ docs/
 ## 4️⃣ 컴포넌트 작성 규칙 (Component Rules)
 
 ### 구조
+
 ```typescript
 // 1. Imports
 import { ReactNode } from 'react';
@@ -97,6 +104,7 @@ export function MyComponent({ title, onClick }: ComponentProps) {
 ```
 
 ### 규칙
+
 - **함수형 컴포넌트**: 항상 `export function` 사용
 - **Props 인터페이스**: 각 컴포넌트마다 정의
 - **분해 할당**: Props는 함수 인자에서 분해 할당
@@ -104,6 +112,7 @@ export function MyComponent({ title, onClick }: ComponentProps) {
 - **주석**: 복잡한 로직에만 한국어로 작성
 
 ### 이벤트 핸들러
+
 - `handle` 접두사: `handleClick`, `handleSubmit`
 - 화살표 함수 사용: `const handleClick = () => {}`
 - Props에서 분해 할당
@@ -113,11 +122,13 @@ export function MyComponent({ title, onClick }: ComponentProps) {
 ## 5️⃣ 폼 처리 규칙 (Form Rules)
 
 ### 기술 스택
+
 - **라이브러리**: React Hook Form
 - **유효성 검사**: Zod
 - **서버 액션**: Next.js Server Actions
 
 ### 패턴
+
 ```typescript
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -150,32 +161,35 @@ export function EventForm() {
 ## 6️⃣ 상태 관리 규칙 (State Management)
 
 ### 라이브러리
+
 - **전역 상태**: Zustand
 - **로컬 상태**: React `useState`
 
 ### Zustand 스토어 구조
+
 ```typescript
 // store/eventStore.ts
-import { create } from 'zustand';
+import { create } from 'zustand'
 
 interface EventStore {
   // State
-  events: Event[];
-  selectedEvent: Event | null;
+  events: Event[]
+  selectedEvent: Event | null
   // Actions
-  setEvents: (events: Event[]) => void;
-  selectEvent: (event: Event) => void;
+  setEvents: (events: Event[]) => void
+  selectEvent: (event: Event) => void
 }
 
-export const useEventStore = create<EventStore>((set) => ({
+export const useEventStore = create<EventStore>(set => ({
   events: [],
   selectedEvent: null,
-  setEvents: (events) => set({ events }),
-  selectEvent: (event) => set({ selectedEvent: event }),
-}));
+  setEvents: events => set({ events }),
+  selectEvent: event => set({ selectedEvent: event }),
+}))
 ```
 
 ### 규칙
+
 - 스토어는 `store/` 디렉토리에 위치
 - 파일명: `[entity]Store.ts`
 - 훅명: `use[Entity]Store`
@@ -186,16 +200,19 @@ export const useEventStore = create<EventStore>((set) => ({
 ## 7️⃣ 스타일링 규칙 (Styling Rules)
 
 ### Tailwind CSS
+
 - **기본 선택**: Tailwind CSS 클래스 사용
 - **반응형**: `sm:`, `md:`, `lg:` 브레이크포인트 활용
 - **어두운 모드**: `dark:` 접두사로 다크 모드 지원
 
 ### shadcn/ui
+
 - **UI 컴포넌트**: shadcn/ui 사용
 - **커스터마이징**: `cn()` 함수로 클래스 병합
 - **구조**: `@/components/ui/` 디렉토리
 
 ### 사용자 정의 스타일
+
 - **글로벌**: `app/globals.css`
 - **모듈**: CSS Modules (필요시)
 - **라이브러리**: `prettier-plugin-tailwindcss`로 자동 정렬
@@ -205,6 +222,7 @@ export const useEventStore = create<EventStore>((set) => ({
 ## 8️⃣ 커밋 규칙 (Commit Rules)
 
 ### 커밋 메시지 형식
+
 ```
 <type>: <제목>
 
@@ -214,6 +232,7 @@ export const useEventStore = create<EventStore>((set) => ({
 ```
 
 ### 타입 (이모지 포함)
+
 - `✨ feat`: 새로운 기능
 - `🐛 fix`: 버그 수정
 - `♻️ refactor`: 코드 구조 개선
@@ -223,17 +242,20 @@ export const useEventStore = create<EventStore>((set) => ({
 - `🔧 chore`: 빌드, 의존성 등 설정 변경
 
 ### 제목
+
 - 한국어로 작성
 - 첫 글자 대문자
 - 명령조 사용 (예: "추가", "수정", "제거")
 - 마침표 금지
 
 ### 본문 (선택사항)
+
 - 변경 이유와 상세 설명
 - 한국어로 작성
 - 70자 이내로 줄바꿈
 
 ### 푸터 (선택사항)
+
 - `Closes #123` (이슈 연결)
 - `Breaking change: ...`
 
@@ -242,6 +264,7 @@ export const useEventStore = create<EventStore>((set) => ({
 ## 9️⃣ 개발 워크플로우 (Development Workflow)
 
 ### 개발 시작
+
 ```bash
 # 1. 저장소 클론
 git clone <repository>
@@ -257,6 +280,7 @@ npm run dev
 ```
 
 ### 기능 개발
+
 ```bash
 # 1. 브랜치 생성
 git checkout -b feature/event-creation
@@ -275,6 +299,7 @@ git push origin feature/event-creation
 ```
 
 ### PR (Pull Request) 규칙
+
 - **제목**: 커밋과 동일한 규칙
 - **설명**: 변경사항, 테스트 방법 포함
 - **리뷰**: 최소 1명의 리뷰 필수
@@ -288,11 +313,13 @@ git push origin feature/event-creation
 ## 🔟 배포 규칙 (Deployment Rules)
 
 ### 환경
+
 - **개발**: `npm run dev`
 - **스테이징**: `npm run build` (로컬 테스트)
 - **프로덕션**: 자동 배포 (GitHub Actions)
 
 ### 배포 전 체크리스트
+
 ```bash
 # 1. 모든 검사 통과
 npm run check-all
@@ -311,6 +338,7 @@ npm run start
 ```
 
 ### 환경 변수
+
 - `.env.local`: 로컬 개발 (Git 무시)
 - `.env.example`: 예시 파일 (Git 포함)
 - 민감한 정보는 절대 커밋하지 말 것

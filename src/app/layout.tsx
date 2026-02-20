@@ -1,8 +1,12 @@
+'use client'
+
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { Toaster } from '@/components/ui/sonner'
+import { BottomTab } from '@/components/navigation/bottom-tab'
+import { usePathname } from 'next/navigation'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -15,9 +19,9 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'NextJS Starter - 모던 웹 스타터킷',
+  title: 'Moim - 모임 이벤트 관리',
   description:
-    'Next.js 15, TypeScript, TailwindCSS, ShadcnUI로 구축된 프로덕션 준비가 완료된 웹 애플리케이션 스타터킷',
+    '친목 모임 주최자의 공지·참여자·카풀·정산을 한 곳에서 관리하는 웹 서비스',
 }
 
 export default function RootLayout({
@@ -32,8 +36,8 @@ export default function RootLayout({
       >
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          enableSystem={false}
           disableTransitionOnChange
         >
           {children}
