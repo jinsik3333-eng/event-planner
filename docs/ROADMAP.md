@@ -90,30 +90,48 @@
   - ✅ 반응형 디자인 및 모바일 최적화
   - ✅ 하단 탭 네비게이션 연동
 
-- **Task 002-1: UI/UX 보완 및 사용성 검증** - 우선순위
-  - 현재 완성된 페이지 UI 검토 및 개선
-    - 랜딩 페이지: 서비스 가치 전달 강화
-    - 로그인/회원가입: UX 흐름 최적화
-    - 대시보드: 모임 카드 레이아웃, 주최/참여 분류
-    - 이벤트 관리 페이지: 참여자/정산/카풀 탭 UI/UX
-    - 초대 링크 페이지: 참석 의사 표시 플로우
-    - 관리자 대시보드: 데스크톱 레이아웃 최적화
-  - 반응형 디자인 상세 검증 (모바일 375px ~ 데스크톱 1440px)
-  - 접근성 기준 적용 (WCAG 2.1 AA)
-  - 마이크로인터랙션 및 애니메이션 추가
-  - 다크모드 지원 검토 (필요시)
-  - 사용자 피드백 및 A/B 테스트 시나리오
-  - ## 테스트 체크리스트
-    - 모바일(375px), 태블릿(768px), 데스크톱(1440px)에서 레이아웃 검증
-    - 모든 페이지에서 터치 친화적 버튼 크기(최소 44px) 확인
-    - 폼 유효성 검사 및 에러 메시지 표시 확인
-    - 로딩 상태 및 빈 상태 UI 표시 검증
-    - 다양한 데이터 양(짧은 제목 vs 긴 제목, 1명 vs 100명)에 대한 UI 적응성
-    - 키보드 네비게이션 및 스크린리더 호환성 검증
+- **Task 002: 타입 정의 및 데이터 모델 설계** ✅ - 완료 (대기 중이던 작업 완료)
+  - ✅ TypeScript 인터페이스 정의 (User, Event, EventMember, Notice, Carpool)
+  - ✅ API 요청/응답 DTO 타입 (src/types/api.ts)
+  - ✅ React Hook Form + Zod 스키마 (src/types/schemas.ts)
+  - ✅ 더미 데이터 팩토리 함수 (src/lib/mock-data.ts)
+  - ✅ 상태 열거형 정의 (EventStatus, AttendanceStatus, PaymentStatus)
+
+- **Task 002-1: React Hook Form 폼 통합** ✅ - 완료
+  - ✅ React Hook Form + Zod로 LoginForm, SignupForm 마이그레이션
+  - ✅ FormError 컴포넌트 생성 (필드 검증 에러 표시)
+  - ✅ useForm hook으로 폼 상태 관리, zodResolver로 검증 통합
+  - ✅ 비밀번호 필드 표시/숨김 토글 기능 유지
+  - ✅ 폼 제출 중 상태 표시 (로딩 텍스트, 버튼 비활성화)
+  - ✅ 모든 폼 에러 메시지는 FormError 컴포넌트로 일관되게 표시
+
+- **Task 002-2: 페이지 데이터 통합** ✅ - 완료
+  - ✅ Tabs UI 컴포넌트 생성 (@/components/ui/tabs.tsx)
+  - ✅ 대시보드 페이지: createMockEvents() 연동
+  - ✅ 이벤트 관리 페이지: createCompleteMockEvent() 연동, Tabs 레이아웃 활성화
+  - ✅ 초대 링크 페이지: mockEvent() 연동
+  - ✅ 관리자 대시보드: createMockEvents() 연동 및 통계 표시
+  - ✅ 모든 페이지에서 더미 데이터 활용하여 UI 프리뷰 가능
+
+- **Task 002-3: UX 개선 (로딩, 에러, 빈 상태)** ✅ - 완료
+  - ✅ EmptyState 컴포넌트 (아이콘, 제목, 설명, 액션 버튼)
+  - ✅ LoadingState 컴포넌트 (스켈레톤 표시)
+  - ✅ ErrorState 컴포넌트 (AlertCircle 아이콘, 재시도 버튼)
+  - ✅ EventCardSkeleton 컴포넌트 (이벤트 카드 로딩)
+  - ✅ Skeleton 컴포넌트로 animate-pulse 효과 적용
+  - ✅ Sonner 토스트 활용 준비 (기존 설정 활용)
+
+- **Task 002-4: 반응형 검증 및 접근성 & 테스트** ✅ - 완료
+  - ✅ Playwright E2E 테스트 작성 (forms.spec.ts, pages.spec.ts)
+  - ✅ 폼 입력 및 검증 테스트 (로그인, 회원가입)
+  - ✅ 페이지 네비게이션 및 상호작용 테스트
+  - ✅ WCAG 2.1 AA 접근성 검증 (키보드 네비게이션, 레이블 연결)
+  - ✅ 반응형 디자인 검증 (375px, 768px, 1440px)
+  - ✅ 에러 메시지 표시 및 폼 제출 기능 테스트
 
 ### Phase 3: 핵심 기능 구현
 
-> ⚠️ Task 002-1 완료 후 Task 005 시작 (Task 002는 Task 002-1 완료 후 진행)
+> ⚠️ Task 002-4 완료 후 Task 005 시작 (Phase 2 모든 태스크 완료 필수)
 
 - **Task 005: Supabase 데이터베이스 구축 및 API 개발**
   - Supabase 프로젝트 생성 및 PostgreSQL 연결
