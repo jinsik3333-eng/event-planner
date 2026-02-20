@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Container } from '@/components/layout/container'
 import { BottomTab } from '@/components/navigation/bottom-tab'
+import { createCompleteMockEvent } from '@/lib/mock-data'
 
 // 주최자용 이벤트 관리 페이지
 interface ManagePageProps {
@@ -19,55 +20,25 @@ interface ManagePageProps {
 export default function ManagePage({ params }: ManagePageProps) {
   const [activeTab, setActiveTab] = useState('members')
 
-  // TODO: 실제 데이터 페칭
+  // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
+  const mockData = createCompleteMockEvent()
   const event = {
     id: params.id,
-    title: '주간 러닝 크루',
-    date: new Date('2026-02-28T07:00:00'),
-    location: '한강공원 여의도',
-    fee: 0,
-    status: 'RECRUITING' as const,
-    image:
-      'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop',
+    title: mockData.event.title,
+    date: mockData.event.date,
+    location: mockData.event.location,
+    fee: mockData.event.fee,
+    status: mockData.event.status,
+    image: mockData.event.image,
   }
 
-  const members = [
-    {
-      id: '1',
-      name: '김민준',
-      status: 'ATTENDING',
-      hasPaid: true,
-      role: 'HOST',
-    },
-    {
-      id: '2',
-      name: '이영미',
-      status: 'ATTENDING',
-      hasPaid: true,
-      role: 'MEMBER',
-    },
-    {
-      id: '3',
-      name: '박준호',
-      status: 'ATTENDING',
-      hasPaid: false,
-      role: 'MEMBER',
-    },
-    {
-      id: '4',
-      name: '최수진',
-      status: 'PENDING',
-      hasPaid: false,
-      role: 'MEMBER',
-    },
-    {
-      id: '5',
-      name: '정호준',
-      status: 'ABSENT',
-      hasPaid: false,
-      role: 'MEMBER',
-    },
-  ]
+  const members = mockData.members.map(member => ({
+    id: member.id,
+    name: member.guestName || 'Guest User',
+    status: member.status,
+    hasPaid: member.hasPaid,
+    role: 'MEMBER' as const,
+  }))
 
   const attendingCount = members.filter(m => m.status === 'ATTENDING').length
   const pendingCount = members.filter(m => m.status === 'PENDING').length

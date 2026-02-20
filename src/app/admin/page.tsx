@@ -5,9 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Container } from '@/components/layout/container'
 
+import { createMockEvents } from '@/lib/mock-data'
+
 // 관리자 대시보드 (데스크톱 전용)
 export default function AdminPage() {
-  // TODO: 실제 데이터 페칭
+  // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
+  const mockEvents = createMockEvents(5)
   const stats = {
     totalEvents: 345,
     activeUsers: 1200,
@@ -15,48 +18,14 @@ export default function AdminPage() {
     totalRevenue: 12500000,
   }
 
-  const recentEvents = [
-    {
-      id: '1',
-      title: '주간 러닝 크루',
-      attendees: 30,
-      maxAttendees: 50,
-      revenue: 0,
-      status: 'RECRUITING',
-    },
-    {
-      id: '2',
-      title: '독서 모임 - 장편소설',
-      attendees: 12,
-      maxAttendees: 15,
-      revenue: 60000,
-      status: 'RECRUITING',
-    },
-    {
-      id: '3',
-      title: '헬스 교실',
-      attendees: 25,
-      maxAttendees: 40,
-      revenue: 125000,
-      status: 'CONFIRMED',
-    },
-    {
-      id: '4',
-      title: '네트워킹 이벤트',
-      attendees: 18,
-      maxAttendees: 25,
-      revenue: 90000,
-      status: 'RECRUITING',
-    },
-    {
-      id: '5',
-      title: '카메라 동호회',
-      attendees: 8,
-      maxAttendees: 20,
-      revenue: 40000,
-      status: 'RECRUITING',
-    },
-  ]
+  const recentEvents = mockEvents.map((event, idx) => ({
+    id: event.id,
+    title: event.title,
+    attendees: Math.floor(Math.random() * 30) + 5,
+    maxAttendees: event.maxAttendees || 50,
+    revenue: event.fee * (Math.floor(Math.random() * 30) + 5),
+    status: idx % 2 === 0 ? 'RECRUITING' : 'CONFIRMED',
+  }))
 
   return (
     <div className="hidden min-h-screen bg-gray-100 md:flex">

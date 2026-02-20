@@ -6,49 +6,24 @@ import { Button } from '@/components/ui/button'
 import { EventCard } from '@/components/event/event-card'
 import { BottomTab } from '@/components/navigation/bottom-tab'
 import { Container } from '@/components/layout/container'
+import { createMockEvents } from '@/lib/mock-data'
 
 // 주최자 대시보드 페이지
 export default function DashboardPage() {
-  // TODO: 실제 데이터 페칭 로직
-  const myEvents = [
-    {
-      id: '1',
-      title: '주간 러닝 크루',
-      image:
-        'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop',
-      date: new Date('2026-02-28T07:00:00'),
-      location: '한강공원 여의도',
-      currentAttendees: 23,
-      maxAttendees: 50,
-      fee: 0,
-      status: 'RECRUITING' as const,
-      isNew: true,
-    },
-    {
-      id: '2',
-      title: '독서 모임 - 장편소설',
-      image:
-        'https://images.unsplash.com/photo-1507842217343-583f20270319?w=500&h=400&fit=crop',
-      date: new Date('2026-03-05T19:00:00'),
-      location: '서울시 강남구 카페',
-      currentAttendees: 8,
-      maxAttendees: 15,
-      fee: 5000,
-      status: 'RECRUITING' as const,
-    },
-    {
-      id: '3',
-      title: '지난 달 축제',
-      image:
-        'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=500&h=400&fit=crop',
-      date: new Date('2026-01-15T18:00:00'),
-      location: '한강공원',
-      currentAttendees: 42,
-      maxAttendees: 50,
-      fee: 15000,
-      status: 'ENDED' as const,
-    },
-  ]
+  // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
+  const events = createMockEvents(3)
+  const myEvents = events.map(event => ({
+    id: event.id,
+    title: event.title,
+    image: event.image,
+    date: event.date,
+    location: event.location,
+    currentAttendees: 12,
+    maxAttendees: event.maxAttendees || 50,
+    fee: event.fee,
+    status: event.status,
+    isNew: false,
+  }))
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">

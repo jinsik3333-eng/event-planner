@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Container } from '@/components/layout/container'
+import { mockEvent } from '@/lib/mock-data'
 
 // 참여자용 초대 링크 진입 페이지
 interface JoinPageProps {
@@ -21,18 +22,18 @@ export default function JoinPage({ params }: JoinPageProps) {
   >(null)
   const [step, setStep] = useState<'info' | 'response' | 'confirm'>('info')
 
-  // TODO: 실제 이벤트 데이터 페칭
+  // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
+  const baseEvent = mockEvent()
   const event = {
-    id: '1',
-    title: '주간 러닝 크루',
-    description: '한강공원에서 함께 뛸 사람들을 찾습니다. 초보자 환영!',
-    date: new Date('2026-02-28T07:00:00'),
-    location: '한강공원 여의도',
-    currentAttendees: 23,
-    maxAttendees: 50,
-    fee: 0,
-    image:
-      'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=400&fit=crop',
+    id: baseEvent.id,
+    title: baseEvent.title,
+    description: baseEvent.description || '모임에 참석하세요!',
+    date: baseEvent.date,
+    location: baseEvent.location,
+    currentAttendees: 12,
+    maxAttendees: baseEvent.maxAttendees || 50,
+    fee: baseEvent.fee,
+    image: baseEvent.image,
   }
 
   const handleAttendanceSelect = (
