@@ -113,3 +113,51 @@ export interface Carpool {
 
 // 열거형 재 export
 export { EventStatus, AttendanceStatus, PaymentStatus } from './enums'
+
+// API DTO 재 export
+export type {
+  CreateEventRequest,
+  UpdateEventRequest,
+  GetEventResponse,
+  CreateEventMemberRequest,
+  UpdateAttendanceRequest,
+  UpdatePaymentStatusRequest,
+  CreateNoticeRequest,
+  UpdateNoticeRequest,
+  CreateCarpoolRequest,
+  JoinCarpoolRequest,
+  ApiResponse,
+  PaginationParams,
+  PaginatedResponse,
+  GetEventsResponse,
+  GetEventMembersResponse,
+  GetNoticesResponse,
+  ValidateInviteCodeRequest,
+  ValidateInviteCodeResponse,
+} from './api'
+
+// Zod 스키마 재 export
+export {
+  createEventSchema,
+  updateAttendanceSchema,
+  createCarpoolSchema,
+  createNoticeSchema,
+  userProfileSchema,
+  guestAttendanceSchema,
+  updateEventSchema,
+  loginSchema,
+  signupSchema,
+} from './schemas'
+
+// Zod 스키마에서 추출한 폼 데이터 타입 재 export
+export type {
+  CreateEventFormData,
+  UpdateAttendanceFormData,
+  CreateCarpoolFormData,
+  CreateNoticeFormData,
+  UserProfileFormData,
+  GuestAttendanceFormData,
+  UpdateEventFormData,
+  LoginFormData,
+  SignupFormData,
+} from './schemas'
