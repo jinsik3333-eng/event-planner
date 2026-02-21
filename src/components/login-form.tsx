@@ -24,23 +24,48 @@ import { FormError } from './forms/form-error'
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isKakaoLoading, setIsKakaoLoading] = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(loginSchema) as any,
-    mode: 'onBlur',
+    mode: 'onChange',
+    defaultValues: {
+      email: '',
+      password: '',
+      rememberMe: false,
+    },
   })
 
+  // 폼 필드 값 감시
+  const email = watch('email')
+  const password = watch('password')
+  const isFormValid = email && password && email.length > 0 && password.length > 0
+
   const onSubmit = async (data: LoginFormData) => {
-    await signIn('credentials', {
-      email: data.email,
-      password: data.password,
-      redirect: true,
-      redirectTo: '/dashboard',
-    })
+    setLoginError(null)
+    try {
+      const result = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
+
+      if (!result?.ok) {
+        setLoginError('이메일 또는 비밀번호가 올바르지 않습니다')
+        return
+      }
+
+      // 로그인 성공
+      window.location.href = '/dashboard'
+    } catch (error) {
+      setLoginError('로그인 중 오류가 발생했습니다')
+      console.error('Login error:', error)
+    }
   }
 
   const handleKakaoSignIn = async () => {
@@ -64,6 +89,11 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {loginError && (
+          <div className="mb-4 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            {loginError}
+          </div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">이메일</Label>
@@ -113,7 +143,11 @@ export function LoginForm() {
             </Label>
           </div>
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
+          <Button
+            type="submit"
+            disabled={isSubmitting || !isFormValid}
+            className="w-full"
+          >
             {isSubmitting ? '로그인 중...' : '로그인하기'}
           </Button>
         </form>

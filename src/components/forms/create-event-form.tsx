@@ -35,6 +35,7 @@ export function CreateEventForm({ onSubmit, isLoading }: CreateEventFormProps) {
       date: '',
       location: '',
       fee: 0,
+      maxAttendees: undefined,
     },
   })
 
@@ -86,7 +87,13 @@ export function CreateEventForm({ onSubmit, isLoading }: CreateEventFormProps) {
           {/* 날짜 및 시간 */}
           <div className="space-y-2">
             <Label htmlFor="date">모임 날짜/시간 *</Label>
-            <Input id="date" type="datetime-local" {...register('date')} />
+            <Input
+              id="date"
+              type="datetime-local"
+              step="1800"
+              {...register('date')}
+            />
+            <p className="text-xs text-muted-foreground">시간은 30분 단위로 선택됩니다</p>
             {errors.date && <FormError error={errors.date} />}
           </div>
 
@@ -128,18 +135,6 @@ export function CreateEventForm({ onSubmit, isLoading }: CreateEventFormProps) {
               {...register('maxAttendees', { valueAsNumber: true })}
             />
             {errors.maxAttendees && <FormError error={errors.maxAttendees} />}
-          </div>
-
-          {/* 이미지 URL */}
-          <div className="space-y-2">
-            <Label htmlFor="image">이미지 URL</Label>
-            <Input
-              id="image"
-              type="url"
-              placeholder="https://example.com/image.jpg"
-              {...register('image')}
-            />
-            {errors.image && <FormError error={errors.image} />}
           </div>
 
           {/* 제출 버튼 */}

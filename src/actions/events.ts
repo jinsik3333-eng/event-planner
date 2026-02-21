@@ -10,6 +10,7 @@ import {
   GetEventResponse,
 } from '@/types/api'
 import { Database } from '@/lib/supabase'
+import { selectImageByTitle } from '@/lib/image-selector'
 
 type Event = Database['public']['Tables']['events']['Row']
 
@@ -28,6 +29,9 @@ export async function createEvent(
     // 초대코드 생성 (9자 길이의 URL-safe 문자열)
     const inviteCode = nanoid(9)
 
+    // 제목에 따라 이미지 자동 선택
+    const imageUrl = selectImageByTitle(validated.title)
+
     // Supabase에 이벤트 생성
     const { data: event, error } = await supabase
       .from('events')
@@ -40,6 +44,7 @@ export async function createEvent(
         fee: validated.fee,
         max_attendees: validated.maxAttendees || null,
         invite_code: inviteCode,
+        image_url: imageUrl,
         status: 'RECRUITING',
       })
       .select()

@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -16,8 +18,13 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { signupSchema, type SignupFormData } from '@/types'
 import { FormError } from './forms/form-error'
+import { signup } from '@/actions/auth'
+import { toast } from 'sonner'
 
 export function SignupForm() {
+  const router = useRouter()
+  const [serverError, setServerError] = useState<string | null>(null)
+
   const {
     register,
     handleSubmit,
@@ -29,8 +36,18 @@ export function SignupForm() {
   })
 
   const onSubmit = async (data: SignupFormData) => {
-    console.log('회원가입 데이터:', data)
-    // TODO: 실제 회원가입 로직 구현 (Server Action 호출)
+    setServerError(null)
+    try {
+      const result = await signup(data.email, data.name, data.password)
+      toast.success(result.message)
+      // 회원가입 성공 후 로그인 페이지로 이동
+      router.push('/login')
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : '회원가입 중 오류가 발생했습니다'
+      setServerError(errorMessage)
+      toast.error(errorMessage)
+    }
   }
   return (
     <Card>
@@ -39,7 +56,22 @@ export function SignupForm() {
         <CardDescription>새 계정을 만들어 서비스를 시작하세요</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {serverError && (
+          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+            {serverError}
+          </div>
+        )}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">이름</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="홍길동"
+              {...register('name')}
+            />
+            {errors.name && <FormError error={errors.name} />}
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">이메일</Label>
             <Input

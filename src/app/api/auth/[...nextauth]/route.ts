@@ -1,6 +1,7 @@
 import NextAuth, { type NextAuthOptions } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import Kakao from 'next-auth/providers/kakao'
+import bcrypt from 'bcryptjs'
 import { supabaseAdmin } from '@/lib/supabase'
 
 declare module 'next-auth' {
@@ -42,26 +43,51 @@ const credentialsProvider = Credentials({
       return null
     }
 
-    // 데모: 간단한 이메일 검증
-    // 실제 구현에서는 비밀번호 해싱 및 검증 필요
-    if (credentials.password === 'demo123') {
-      const { data: user } = await supabaseAdmin!
+    if (!supabaseAdmin) {
+      console.error('Supabase Admin not configured')
+      return null
+    }
+
+    try {
+      // 사용자 조회
+      const { data: user, error } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('email', credentials.email)
         .single()
 
-      if (user) {
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.profile_image,
+      if (error || !user) {
+        return null
+      }
+
+      // 비밀번호 검증
+      if (user.password_hash) {
+        const isPasswordValid = await bcrypt.compare(
+          credentials.password,
+          user.password_hash
+        )
+
+        if (!isPasswordValid) {
+          return null
+        }
+      } else {
+        // 비밀번호 해시가 없는 경우 (마이그레이션 대상)
+        // 데모 비밀번호 'demo12345'로 폴백
+        if (credentials.password !== 'demo12345') {
+          return null
         }
       }
-    }
 
-    return null
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.profile_image,
+      }
+    } catch (error) {
+      console.error('Auth error:', error)
+      return null
+    }
   },
 })
 
@@ -85,7 +111,7 @@ if (
 providers.push(credentialsProvider)
 
 // NextAuth 옵션
-const options: NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers,
 
   callbacks: {
@@ -201,6 +227,6 @@ const options: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 }
 
-const handler = NextAuth(options)
+const handler = NextAuth(authOptions)
 
 export { handler as GET, handler as POST }

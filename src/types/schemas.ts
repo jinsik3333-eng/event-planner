@@ -17,10 +17,18 @@ export const createEventSchema = z.object({
     .default(''),
   date: z
     .string()
-    .datetime({ message: '올바른 날짜/시간 형식이 아닙니다.' })
-    .refine(date => new Date(date) > new Date(), {
-      message: '모임 날짜는 미래여야 합니다.',
-    }),
+    .min(1, '모임 날짜/시간을 선택해 주세요.')
+    .refine(
+      date => {
+        try {
+          const d = new Date(date)
+          return d > new Date()
+        } catch {
+          return false
+        }
+      },
+      { message: '모임 날짜는 미래여야 합니다.' }
+    ),
   location: z
     .string()
     .min(1, '모임 장소를 입력해 주세요.')
@@ -36,7 +44,6 @@ export const createEventSchema = z.object({
     .min(1, '최대 인원은 1명 이상이어야 합니다.')
     .max(100, '최대 인원은 100명 이하여야 합니다.')
     .optional(),
-  image: z.string().url('올바른 이미지 URL이 아닙니다.').optional(),
 })
 
 /**
@@ -168,6 +175,10 @@ export type LoginFormData = z.infer<typeof loginSchema>
  */
 export const signupSchema = z
   .object({
+    name: z
+      .string()
+      .min(2, '이름은 최소 2자 이상이어야 합니다.')
+      .min(1, '이름을 입력해 주세요.'),
     email: z
       .string()
       .email('올바른 이메일 주소를 입력해 주세요.')
