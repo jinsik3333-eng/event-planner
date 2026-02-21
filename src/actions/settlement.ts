@@ -197,6 +197,7 @@ export async function updatePaymentStatus(
 
 /**
  * 한 번에 여러 참여자의 납부 상태 업데이트
+ * 순차 처리 + 롤백 스택으로 부분 실패 시 모든 변경사항 롤백
  * 주최자만 가능
  */
 export async function bulkUpdatePaymentStatus(
@@ -215,38 +216,114 @@ export async function bulkUpdatePaymentStatus(
       }
     }
 
-    // 각 참여자의 납부 상태를 개별적으로 업데이트
-    const results = await Promise.all(
-      updates.map(update =>
-        supabase
-          .from('event_members')
-          .update({
-            has_paid: update.hasPaid,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', update.memberId)
-          .eq('event_id', eventId)
-          .select()
-          .single()
-      )
-    )
-
-    // 에러 확인
-    const errorResult = results.find(r => r.error)
-    if (errorResult?.error) {
+    // 서버 세션에서 인증된 사용자 ID 획득
+    const session = await getServerSession()
+    if (!session?.user?.id) {
       return {
         success: false,
-        error: `납부 상태 업데이트에 실패했습니다: ${errorResult.error.message}`,
+        error: '로그인이 필요합니다.',
       }
     }
 
-    const updatedMembers = results
-      .map(r => r.data)
-      .filter(Boolean) as EventMember[]
+    const userId = session.user.id
+
+    // 주최자 권한 검증
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('host_id')
+      .eq('id', eventId)
+      .single()
+
+    if (eventError || !event) {
+      return {
+        success: false,
+        error: '이벤트를 찾을 수 없습니다.',
+      }
+    }
+
+    if (event.host_id !== userId) {
+      return {
+        success: false,
+        error: '이벤트의 주최자만 납부 상태를 변경할 수 있습니다.',
+      }
+    }
+
+    const results: EventMember[] = []
+    const rollbackStack: Array<{
+      memberId: string
+      previousHasPaid: boolean
+    }> = []
+
+    // 순차 처리: 각 업데이트를 하나씩 실행
+    for (const update of updates) {
+      // 현재 상태 조회 (롤백용)
+      const { data: currentMember, error: fetchError } = await supabase
+        .from('event_members')
+        .select('has_paid')
+        .eq('id', update.memberId)
+        .eq('event_id', eventId)
+        .single()
+
+      if (fetchError || !currentMember) {
+        // 실패 시 이전 변경사항 롤백
+        for (const rollback of rollbackStack) {
+          await supabase
+            .from('event_members')
+            .update({
+              has_paid: rollback.previousHasPaid,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', rollback.memberId)
+            .eq('event_id', eventId)
+        }
+
+        return {
+          success: false,
+          error: `참여자 정보 조회 실패 (ID: ${update.memberId})`,
+        }
+      }
+
+      // 납부 상태 업데이트
+      const { data: updatedMember, error: updateError } = await supabase
+        .from('event_members')
+        .update({
+          has_paid: update.hasPaid,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', update.memberId)
+        .eq('event_id', eventId)
+        .select()
+        .single()
+
+      if (updateError || !updatedMember) {
+        // 실패 시 이전 변경사항 롤백
+        for (const rollback of rollbackStack) {
+          await supabase
+            .from('event_members')
+            .update({
+              has_paid: rollback.previousHasPaid,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', rollback.memberId)
+            .eq('event_id', eventId)
+        }
+
+        return {
+          success: false,
+          error: `납부 상태 업데이트에 실패했습니다: ${updateError?.message || '알 수 없는 오류'}`,
+        }
+      }
+
+      results.push(updatedMember)
+      rollbackStack.push({
+        memberId: update.memberId,
+        previousHasPaid: currentMember.has_paid,
+      })
+    }
 
     return {
       success: true,
-      data: updatedMembers,
+      data: results,
     }
   } catch (error) {
     if (error instanceof Error) {
