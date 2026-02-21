@@ -911,14 +911,32 @@ export default function ManagePage() {
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => {
+                  onClick={async () => {
                     const link = getInviteLink()
-                    const text = `${event?.title} 모임에 참석해주세요!\n${link}`
-                    const kakaoShareUrl = `https://story.kakao.com/?app=3&kakao_agent=kakaolink/2.0/easylink&extra={"key1":"value1","key2":"value2"}`
-                    window.open(kakaoShareUrl, '_blank')
+                    const shareData = {
+                      title: event?.title || '모임 초대',
+                      text: `${event?.title} 모임에 참석해주세요!`,
+                      url: link,
+                    }
+
+                    try {
+                      // Web Share API 지원 확인
+                      if (navigator.share) {
+                        await navigator.share(shareData)
+                      } else {
+                        // 폴백: 클립보드에 복사
+                        await copyToClipboard()
+                        alert('링크가 클립보드에 복사되었습니다.')
+                      }
+                    } catch (err) {
+                      // 사용자가 공유를 취소한 경우나 기타 오류
+                      if (err instanceof Error && err.name !== 'AbortError') {
+                        console.error('공유 실패:', err)
+                      }
+                    }
                   }}
                 >
-                  카카오톡
+                  공유
                 </Button>
                 <Button
                   variant="outline"
@@ -934,7 +952,7 @@ export default function ManagePage() {
                     )
                   }}
                 >
-                  SNS 공유
+                  X 공유
                 </Button>
               </div>
             </div>
