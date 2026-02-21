@@ -50,7 +50,14 @@ export default function ManagePage() {
   const [copied, setCopied] = useState(false)
   const [kakaoPayLink, setKakaoPayLink] = useState('')
   const [noticeContent, setNoticeContent] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  // 상태 관리를 기능별로 분리하여 동시에 여러 작업 처리 가능
+  const [submittingPaymentId, setSubmittingPaymentId] = useState<string | null>(
+    null
+  )
+  const [isCreatingCarpool, setIsCreatingCarpool] = useState(false)
+  const [joiningCarpoolId, setJoiningCarpoolId] = useState<string | null>(null)
+  const [isCreatingNotice, setIsCreatingNotice] = useState(false)
+  const [deletingNoticeId, setDeletingNoticeId] = useState<string | null>(null)
 
   // 이벤트, 참여자, 카풀, 공지사항 정보 로드
   useEffect(() => {
@@ -532,7 +539,7 @@ export default function ManagePage() {
                           variant="outline"
                           onClick={async () => {
                             try {
-                              setIsSubmitting(true)
+                              setSubmittingPaymentId(member.id)
                               const result = await updatePaymentStatus({
                                 eventId: event.id,
                                 memberId: member.id,
@@ -560,12 +567,14 @@ export default function ManagePage() {
                                   : '오류가 발생했습니다.'
                               )
                             } finally {
-                              setIsSubmitting(false)
+                              setSubmittingPaymentId(null)
                             }
                           }}
-                          disabled={isSubmitting}
+                          disabled={submittingPaymentId === member.id}
                         >
-                          {isSubmitting ? '처리 중...' : '완료'}
+                          {submittingPaymentId === member.id
+                            ? '처리 중...'
+                            : '완료'}
                         </Button>
                       </div>
                     ))
@@ -581,7 +590,7 @@ export default function ManagePage() {
               onSubmit={async data => {
                 if (!event) return
                 try {
-                  setIsSubmitting(true)
+                  setIsCreatingCarpool(true)
                   const result = await createCarpool({
                     eventId: event.id,
                     seats: data.seats,
@@ -599,10 +608,10 @@ export default function ManagePage() {
                     err instanceof Error ? err.message : '오류가 발생했습니다.'
                   )
                 } finally {
-                  setIsSubmitting(false)
+                  setIsCreatingCarpool(false)
                 }
               }}
-              isLoading={isSubmitting}
+              isLoading={isCreatingCarpool}
             />
 
             {/* 카풀 목록 */}
@@ -653,7 +662,7 @@ export default function ManagePage() {
                         className="flex-1 text-xs"
                         onClick={async () => {
                           try {
-                            setIsSubmitting(true)
+                            setJoiningCarpoolId(carpool.id)
                             const result = await joinCarpool({
                               carpoolId: carpool.id,
                             })
@@ -670,12 +679,14 @@ export default function ManagePage() {
                                 : '오류가 발생했습니다.'
                             )
                           } finally {
-                            setIsSubmitting(false)
+                            setJoiningCarpoolId(null)
                           }
                         }}
-                        disabled={isSubmitting}
+                        disabled={joiningCarpoolId === carpool.id}
                       >
-                        탑승 신청
+                        {joiningCarpoolId === carpool.id
+                          ? '신청 중...'
+                          : '탑승 신청'}
                       </Button>
                       <Button
                         size="sm"
@@ -715,7 +726,7 @@ export default function ManagePage() {
                   onClick={async () => {
                     if (!event || !noticeContent.trim()) return
                     try {
-                      setIsSubmitting(true)
+                      setIsCreatingNotice(true)
                       const result = await createNotice({
                         eventId: event.id,
                         content: noticeContent,
@@ -735,13 +746,13 @@ export default function ManagePage() {
                           : '오류가 발생했습니다.'
                       )
                     } finally {
-                      setIsSubmitting(false)
+                      setIsCreatingNotice(false)
                     }
                   }}
-                  disabled={isSubmitting || !noticeContent.trim()}
+                  disabled={isCreatingNotice || !noticeContent.trim()}
                   className="w-full"
                 >
-                  {isSubmitting ? '작성 중...' : '공지하기'}
+                  {isCreatingNotice ? '작성 중...' : '공지하기'}
                 </Button>
               </CardContent>
             </Card>
@@ -795,7 +806,7 @@ export default function ManagePage() {
                               return
                             }
                             try {
-                              setIsSubmitting(true)
+                              setDeletingNoticeId(notice.id)
                               const result = await deleteNotice(notice.id)
                               if (result.success) {
                                 setNotices(
@@ -812,10 +823,10 @@ export default function ManagePage() {
                                   : '오류가 발생했습니다.'
                               )
                             } finally {
-                              setIsSubmitting(false)
+                              setDeletingNoticeId(null)
                             }
                           }}
-                          disabled={isSubmitting}
+                          disabled={deletingNoticeId === notice.id}
                         >
                           <Trash2 size={16} className="text-red-600" />
                         </Button>
