@@ -2,6 +2,7 @@
 
 import { getServerSession } from 'next-auth'
 import { supabase } from '@/lib/supabase'
+import { calculatePricePerPerson } from '@/lib/calculation'
 import { UpdatePaymentStatusRequest, ApiResponse } from '@/types/api'
 import { Database } from '@/lib/supabase'
 
@@ -70,7 +71,7 @@ export async function getSettlementSummary(eventId: string): Promise<
     const attendingMembers = members || []
     const totalFee = event.fee || 0
     const attendingCount = attendingMembers.length
-    const pricePerPerson = attendingCount > 0 ? totalFee / attendingCount : 0
+    const pricePerPerson = calculatePricePerPerson(totalFee, attendingCount)
 
     const paidCount = attendingMembers.filter(m => m.has_paid).length
     const unpaidCount = attendingCount - paidCount
@@ -83,11 +84,11 @@ export async function getSettlementSummary(eventId: string): Promise<
         event,
         members: attendingMembers,
         totalFee,
-        pricePerPerson: Math.round(pricePerPerson),
+        pricePerPerson,
         paidCount,
         unpaidCount,
-        totalPaid: Math.round(totalPaid),
-        totalUnpaid: Math.round(totalUnpaid),
+        totalPaid,
+        totalUnpaid,
       },
     }
   } catch (error) {

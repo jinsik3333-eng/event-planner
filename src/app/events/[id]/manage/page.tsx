@@ -23,6 +23,7 @@ import { BottomTab } from '@/components/navigation/bottom-tab'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { CarpoolForm } from '@/components/forms/carpool-form'
+import { calculatePricePerPerson } from '@/lib/calculation'
 import { getEvent } from '@/actions/events'
 import { getEventMembers } from '@/actions/attendance'
 import { updatePaymentStatus } from '@/actions/settlement'
@@ -428,9 +429,10 @@ export default function ManagePage() {
                 <div>
                   <p className="text-xs text-gray-600">1인당 금액</p>
                   <p className="mt-1 text-2xl font-bold text-emerald-600">
-                    {attendingCount > 0
-                      ? Math.ceil(event.fee / attendingCount).toLocaleString()
-                      : 0}
+                    {calculatePricePerPerson(
+                      event.fee,
+                      attendingCount
+                    ).toLocaleString()}
                     원
                   </p>
                 </div>
