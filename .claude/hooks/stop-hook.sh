@@ -7,15 +7,17 @@
 # .env 파일에서 Slack 웹훅 URL 로드
 if [ -f "$CLAUDE_PROJECT_DIR/.env" ]; then
     source "$CLAUDE_PROJECT_DIR/.env"
+elif [ -f "$CLAUDE_PROJECT_DIR/.env.local" ]; then
+    source "$CLAUDE_PROJECT_DIR/.env.local"
 else
-    echo "오류: .env 파일을 찾을 수 없습니다: $CLAUDE_PROJECT_DIR/.env" >&2
-    exit 1
+    echo "경고: .env 또는 .env.local 파일을 찾을 수 없습니다. Slack 알림을 생략합니다." >&2
+    exit 0
 fi
 
 # Slack 웹훅 URL 확인
 if [ -z "$SLACK_WEBHOOK_URL" ]; then
-    echo "오류: SLACK_WEBHOOK_URL이 설정되지 않았습니다." >&2
-    exit 1
+    echo "경고: SLACK_WEBHOOK_URL이 설정되지 않았습니다. Slack 알림을 생략합니다." >&2
+    exit 0
 fi
 
 # 프로젝트명 추출
