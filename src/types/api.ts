@@ -173,12 +173,11 @@ export interface CreateCarpoolRequest {
 
 /**
  * 카풀 탑승자 신청 요청 DTO
+ * 사용자 ID는 서버에서 세션을 통해 검증됨
  */
 export interface JoinCarpoolRequest {
   /** 카풀 ID */
   carpoolId: string
-  /** 사용자 ID */
-  userId: string
 }
 
 /**

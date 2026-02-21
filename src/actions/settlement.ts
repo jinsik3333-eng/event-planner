@@ -1,5 +1,6 @@
 'use server'
 
+import { getServerSession } from 'next-auth'
 import { supabase } from '@/lib/supabase'
 import { UpdatePaymentStatusRequest, ApiResponse } from '@/types/api'
 import { Database } from '@/lib/supabase'
@@ -105,17 +106,49 @@ export async function getSettlementSummary(eventId: string): Promise<
 
 /**
  * 참여자 납부 상태 업데이트
- * 주최자만 가능 (RLS에 의해 검증)
+ * 서버에서 검증된 사용자만 주최자인 경우에만 가능
  */
 export async function updatePaymentStatus(
   data: UpdatePaymentStatusRequest
 ): Promise<ApiResponse<EventMember>> {
   try {
+    // 서버 세션에서 인증된 사용자 ID 획득
+    const session = await getServerSession()
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: '로그인이 필요합니다.',
+      }
+    }
+
+    const userId = session.user.id
+
     // 입력값 검증
     if (!data.eventId || !data.memberId) {
       return {
         success: false,
         error: '이벤트 ID와 참여자 ID가 필요합니다.',
+      }
+    }
+
+    // 주최자 권한 검증
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('host_id')
+      .eq('id', data.eventId)
+      .single()
+
+    if (eventError || !event) {
+      return {
+        success: false,
+        error: '이벤트를 찾을 수 없습니다.',
+      }
+    }
+
+    if (event.host_id !== userId) {
+      return {
+        success: false,
+        error: '이벤트의 주최자만 납부 상태를 변경할 수 있습니다.',
       }
     }
 

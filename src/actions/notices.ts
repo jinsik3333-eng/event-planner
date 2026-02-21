@@ -1,5 +1,6 @@
 'use server'
 
+import { getServerSession } from 'next-auth'
 import { supabase } from '@/lib/supabase'
 import {
   CreateNoticeRequest,
@@ -12,18 +13,28 @@ type Notice = Database['public']['Tables']['notices']['Row']
 
 /**
  * 공지사항 생성
- * 주최자만 가능 (RLS에 의해 검증)
+ * 서버에서 검증된 사용자만 작성 가능
  */
 export async function createNotice(
-  authorId: string,
   data: CreateNoticeRequest
 ): Promise<ApiResponse<Notice>> {
   try {
-    // 입력값 검증
-    if (!authorId || !data.eventId) {
+    // 서버 세션에서 인증된 사용자 ID 획득
+    const session = await getServerSession()
+    if (!session?.user?.id) {
       return {
         success: false,
-        error: '사용자 ID와 이벤트 ID가 필요합니다.',
+        error: '로그인이 필요합니다.',
+      }
+    }
+
+    const authorId = session.user.id
+
+    // 입력값 검증
+    if (!data.eventId) {
+      return {
+        success: false,
+        error: '이벤트 ID가 필요합니다.',
       }
     }
 
@@ -130,17 +141,67 @@ export async function updateNotice(
 
 /**
  * 공지사항 삭제
- * 작성자만 삭제 가능 (RLS에 의해 검증)
+ * 서버에서 검증된 사용자만 삭제 가능 (작성자 또는 주최자)
  */
 export async function deleteNotice(
   noticeId: string
 ): Promise<ApiResponse<null>> {
   try {
+    // 서버 세션에서 인증된 사용자 ID 획득
+    const session = await getServerSession()
+    if (!session?.user?.id) {
+      return {
+        success: false,
+        error: '로그인이 필요합니다.',
+      }
+    }
+
+    const userId = session.user.id
+
     // 입력값 검증
     if (!noticeId) {
       return {
         success: false,
         error: '공지사항 ID가 필요합니다.',
+      }
+    }
+
+    // 공지사항 정보 조회
+    const { data: notice, error: noticeError } = await supabase
+      .from('notices')
+      .select('author_id, event_id')
+      .eq('id', noticeId)
+      .single()
+
+    if (noticeError || !notice) {
+      return {
+        success: false,
+        error: '공지사항을 찾을 수 없습니다.',
+      }
+    }
+
+    // 이벤트 정보 조회 (주최자 확인용)
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('host_id')
+      .eq('id', notice.event_id)
+      .single()
+
+    if (eventError || !event) {
+      return {
+        success: false,
+        error: '이벤트 정보를 찾을 수 없습니다.',
+      }
+    }
+
+    // 권한 검증: 작성자 또는 주최자인지 확인
+    const isAuthor = notice.author_id === userId
+    const isHost = event.host_id === userId
+
+    if (!isAuthor && !isHost) {
+      return {
+        success: false,
+        error: '이 공지사항을 삭제할 권한이 없습니다.',
       }
     }
 

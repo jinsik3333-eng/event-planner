@@ -1,5 +1,6 @@
 'use server'
 
+import { getServerSession } from 'next-auth'
 import { supabase } from '@/lib/supabase'
 import {
   CreateCarpoolRequest,
@@ -13,17 +14,28 @@ type CarpoolRequest = Database['public']['Tables']['carpool_requests']['Row']
 
 /**
  * 카풀 운전자 등록
+ * 서버에서 검증된 사용자만 카풀 생성 가능
  */
 export async function createCarpool(
-  driverId: string,
   data: CreateCarpoolRequest
 ): Promise<ApiResponse<Carpool>> {
   try {
-    // 입력값 검증
-    if (!driverId || !data.eventId) {
+    // 서버 세션에서 인증된 사용자 ID 획득
+    const session = await getServerSession()
+    if (!session?.user?.id) {
       return {
         success: false,
-        error: '사용자 ID와 이벤트 ID가 필요합니다.',
+        error: '로그인이 필요합니다.',
+      }
+    }
+
+    const driverId = session.user.id
+
+    // 입력값 검증
+    if (!data.eventId) {
+      return {
+        success: false,
+        error: '이벤트 ID가 필요합니다.',
       }
     }
 
@@ -80,17 +92,28 @@ export async function createCarpool(
 
 /**
  * 카풀 탑승 신청
+ * 서버에서 검증된 사용자만 신청 가능
  */
 export async function joinCarpool(
-  passengerId: string,
   data: JoinCarpoolRequest
 ): Promise<ApiResponse<CarpoolRequest>> {
   try {
-    // 입력값 검증
-    if (!passengerId || !data.carpoolId) {
+    // 서버 세션에서 인증된 사용자 ID 획득
+    const session = await getServerSession()
+    if (!session?.user?.id) {
       return {
         success: false,
-        error: '사용자 ID와 카풀 ID가 필요합니다.',
+        error: '로그인이 필요합니다.',
+      }
+    }
+
+    const passengerId = session.user.id
+
+    // 입력값 검증
+    if (!data.carpoolId) {
+      return {
+        success: false,
+        error: '카풀 ID가 필요합니다.',
       }
     }
 
@@ -189,17 +212,28 @@ export async function joinCarpool(
 
 /**
  * 카풀 탑승 취소
+ * 서버에서 검증된 사용자만 취소 가능
  */
 export async function leaveCarpool(
-  passengerId: string,
   carpoolId: string
 ): Promise<ApiResponse<null>> {
   try {
-    // 입력값 검증
-    if (!passengerId || !carpoolId) {
+    // 서버 세션에서 인증된 사용자 ID 획득
+    const session = await getServerSession()
+    if (!session?.user?.id) {
       return {
         success: false,
-        error: '사용자 ID와 카풀 ID가 필요합니다.',
+        error: '로그인이 필요합니다.',
+      }
+    }
+
+    const passengerId = session.user.id
+
+    // 입력값 검증
+    if (!carpoolId) {
+      return {
+        success: false,
+        error: '카풀 ID가 필요합니다.',
       }
     }
 

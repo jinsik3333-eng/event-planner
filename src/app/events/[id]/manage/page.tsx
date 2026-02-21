@@ -26,14 +26,8 @@ import { CarpoolForm } from '@/components/forms/carpool-form'
 import { getEvent } from '@/actions/events'
 import { getEventMembers } from '@/actions/attendance'
 import { updatePaymentStatus } from '@/actions/settlement'
-import {
-  getCarpools,
-  getCarpool,
-  createCarpool,
-  joinCarpool,
-} from '@/actions/carpool'
+import { getCarpools, createCarpool, joinCarpool } from '@/actions/carpool'
 import { getNotices, createNotice, deleteNotice } from '@/actions/notices'
-import { useCurrentUserId } from '@/hooks/useAuth'
 import type { GetEventResponse } from '@/types/api'
 import type { Database } from '@/lib/supabase'
 
@@ -44,7 +38,7 @@ type Notice = Database['public']['Tables']['notices']['Row']
 export default function ManagePage() {
   const params = useParams()
   const router = useRouter()
-  const currentUserId = useCurrentUserId()
+  // 사용자 ID는 Server Action 내부에서 getServerSession으로 검증됨
   const [activeTab, setActiveTab] = useState('members')
   const [event, setEvent] = useState<GetEventResponse | null>(null)
   const [members, setMembers] = useState<EventMember[]>([])
@@ -544,6 +538,7 @@ export default function ManagePage() {
                                 memberId: member.id,
                                 hasPaid: true,
                               })
+                              // 서버에서 사용자 인증을 검증합니다
                               if (result.success) {
                                 setMembers(
                                   members.map(m =>
@@ -584,14 +579,15 @@ export default function ManagePage() {
             {/* 운전자 등록 폼 */}
             <CarpoolForm
               onSubmit={async data => {
-                if (!event || !currentUserId) return
+                if (!event) return
                 try {
                   setIsSubmitting(true)
-                  const result = await createCarpool(currentUserId, {
+                  const result = await createCarpool({
                     eventId: event.id,
                     seats: data.seats,
                     departure: data.departure,
                   })
+                  // 서버에서 사용자 인증을 검증합니다
                   if (result.success && result.data) {
                     setCarpools([result.data, ...carpools])
                     alert('카풀이 등록되었습니다.')
@@ -656,13 +652,12 @@ export default function ManagePage() {
                         variant="outline"
                         className="flex-1 text-xs"
                         onClick={async () => {
-                          if (!currentUserId) return
                           try {
                             setIsSubmitting(true)
-                            const result = await joinCarpool(currentUserId, {
+                            const result = await joinCarpool({
                               carpoolId: carpool.id,
-                              userId: currentUserId,
                             })
+                            // 서버에서 사용자 인증을 검증합니다
                             if (result.success) {
                               alert('카풀 신청이 완료되었습니다.')
                             } else {
@@ -718,14 +713,14 @@ export default function ManagePage() {
                 </div>
                 <Button
                   onClick={async () => {
-                    if (!event || !currentUserId || !noticeContent.trim())
-                      return
+                    if (!event || !noticeContent.trim()) return
                     try {
                       setIsSubmitting(true)
-                      const result = await createNotice(currentUserId, {
+                      const result = await createNotice({
                         eventId: event.id,
                         content: noticeContent,
                       })
+                      // 서버에서 사용자 인증을 검증합니다
                       if (result.success && result.data) {
                         setNotices([result.data, ...notices])
                         setNoticeContent('')
