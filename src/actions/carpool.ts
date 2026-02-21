@@ -276,11 +276,17 @@ export async function leaveCarpool(
 }
 
 /**
- * 이벤트의 카풀 목록 조회
+ * 이벤트의 카풀 목록 조회 (탑승 현황 포함)
  */
-export async function getCarpools(
-  eventId: string
-): Promise<ApiResponse<Carpool[]>> {
+export async function getCarpools(eventId: string): Promise<
+  ApiResponse<
+    Array<
+      Carpool & {
+        acceptedCount: number
+      }
+    >
+  >
+> {
   try {
     // 입력값 검증
     if (!eventId) {
@@ -304,9 +310,32 @@ export async function getCarpools(
       }
     }
 
+    if (!carpools || carpools.length === 0) {
+      return {
+        success: true,
+        data: [],
+      }
+    }
+
+    // 각 카풀의 탑승자 수 조회
+    const carpoolsWithCounts = await Promise.all(
+      carpools.map(async carpool => {
+        const { data: requests } = await supabase
+          .from('carpool_requests')
+          .select('id')
+          .eq('carpool_id', carpool.id)
+          .eq('status', 'ACCEPTED')
+
+        return {
+          ...carpool,
+          acceptedCount: requests?.length || 0,
+        }
+      })
+    )
+
     return {
       success: true,
-      data: carpools || [],
+      data: carpoolsWithCounts,
     }
   } catch (error) {
     if (error instanceof Error) {

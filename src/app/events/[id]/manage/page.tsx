@@ -42,7 +42,9 @@ export default function ManagePage() {
   const [activeTab, setActiveTab] = useState('members')
   const [event, setEvent] = useState<GetEventResponse | null>(null)
   const [members, setMembers] = useState<EventMember[]>([])
-  const [carpools, setCarpools] = useState<Carpool[]>([])
+  const [carpools, setCarpools] = useState<
+    Array<Carpool & { acceptedCount: number }>
+  >([])
   const [notices, setNotices] = useState<Notice[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -598,7 +600,10 @@ export default function ManagePage() {
                   })
                   // 서버에서 사용자 인증을 검증합니다
                   if (result.success && result.data) {
-                    setCarpools([result.data, ...carpools])
+                    setCarpools([
+                      { ...result.data, acceptedCount: 0 },
+                      ...carpools,
+                    ])
                     alert('카풀이 등록되었습니다.')
                   } else {
                     alert(result.error || '등록에 실패했습니다.')
@@ -643,13 +648,13 @@ export default function ManagePage() {
                             <div
                               className="h-full rounded-full bg-emerald-500"
                               style={{
-                                width: `${(0 / carpool.seats) * 100}%`,
+                                width: `${(carpool.acceptedCount / carpool.seats) * 100}%`,
                               }}
                             />
                           </div>
                         </div>
                         <span className="text-sm font-semibold text-gray-900">
-                          0 / {carpool.seats}
+                          {carpool.acceptedCount} / {carpool.seats}
                         </span>
                       </div>
                     </div>
