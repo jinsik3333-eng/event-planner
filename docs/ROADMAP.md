@@ -146,10 +146,29 @@
       - ✅ deleteEvent() - 주최자만 삭제 가능
       - ✅ listUserEvents() - 주최/참여 모임 구분
       - ✅ getEventByInviteCode() - 게스트 접근 가능
-    - 참여자 관리 (참석 의사 표시, 목록 조회) - F003, F004 **[Task 005-3]**
-    - 정산 관리 (금액 계산, 납부 상태 업데이트) - F005 **[Task 005-4]**
-    - 카풀 관리 (운전자 등록, 탑승자 신청/취소) - F006 **[Task 005-5]**
-    - 공지사항 CRUD - F007 **[Task 005-6]**
+    - ✅ 참여자 관리 (참석 의사 표시, 목록 조회) - F003, F004 **[Task 005-3]**
+      - ✅ createEventMember() - 로그인/게스트 참여자 추가
+      - ✅ updateAttendance() - 참석 상태 변경
+      - ✅ getEventMembers() - 참여자 목록 조회
+      - ✅ removeEventMember() - 참여자 제거 (주최자)
+    - ✅ 정산 관리 (금액 계산, 납부 상태 업데이트) - F005 **[Task 005-4]**
+      - ✅ getSettlementSummary() - 정산 현황 조회 및 자동 계산
+      - ✅ updatePaymentStatus() - 개별 납부 상태 업데이트
+      - ✅ bulkUpdatePaymentStatus() - 일괄 납부 상태 업데이트
+      - ✅ getPaymentStats() - 납부율 통계 조회
+    - ✅ 카풀 관리 (운전자 등록, 탑승자 신청/취소) - F006 **[Task 005-5]**
+      - ✅ createCarpool() - 카풀 운전자 등록
+      - ✅ joinCarpool() - 카풀 탑승 신청 (PENDING 상태)
+      - ✅ leaveCarpool() - 카풀 탑승 취소
+      - ✅ getCarpools() - 이벤트별 카풀 목록 조회
+      - ✅ getCarpool() - 카풀 상세 조회 (신청자 통계 포함)
+      - ✅ getUserCarpools() - 사용자 신청 카풀 목록 조회
+    - ✅ 공지사항 CRUD - F007 **[Task 005-6]**
+      - ✅ createNotice() - 공지사항 작성 (주최자)
+      - ✅ updateNotice() - 공지사항 수정 (작성자)
+      - ✅ deleteNotice() - 공지사항 삭제 (작성자)
+      - ✅ getNotices() - 공지사항 목록 조회
+      - ✅ getRecentNotices() - 최근 공지사항 조회
   - 폼 컴포넌트 생성
     - ✅ CreateEventForm - React Hook Form + Zod 구현
     - ✅ AttendanceForm - 참석 의사 표시 폼
@@ -157,10 +176,11 @@
   - 더미 데이터를 실제 API 호출로 교체 (Task 007에서 수행)
   - ## 테스트 체크리스트
     - ✅ 이벤트 생성/조회/수정/삭제 API 동작 검증
-    - 참여자 참석 의사 표시 및 현황 조회 테스트
-    - 정산 금액 계산 정확성 검증
-    - 카풀 등록/신청/취소 플로우 테스트
-    - RLS 정책 검증 (권한 없는 접근 차단)
+    - ✅ 참여자 참석 의사 표시 및 현황 조회 테스트 (attendance.ts 구현)
+    - ✅ 정산 금액 계산 정확성 검증 (settlement.ts 구현)
+    - ✅ 카풀 등록/신청/취소 플로우 테스트 (carpool.ts 구현)
+    - ✅ 공지사항 작성/수정/삭제 테스트 (notices.ts 구현)
+    - RLS 정책 검증 (권한 없는 접근 차단) - 후속 테스트
 
 - **Task 006: 카카오 OAuth 인증 시스템 구현** (F010)
   - NextAuth.js 설치 및 카카오 Provider 설정
@@ -298,3 +318,17 @@
 ---
 
 _이 로드맵은 `docs/PRD.md`와 함께 관리됩니다._
+
+---
+
+## 📊 진행 상황 현황
+
+| Phase       | 상태       | 진행도                              |
+| ----------- | ---------- | ----------------------------------- |
+| **Phase 1** | ✅ 완료    | 2/2 Tasks                           |
+| **Phase 2** | ✅ 완료    | 4/4 Tasks                           |
+| **Phase 3** | 🔄 진행 중 | 2/4 Tasks (Task 005-2,3,4,5,6 완료) |
+| **Phase 4** | ⏳ 대기 중 | 0/4 Tasks                           |
+
+**📅 최종 업데이트**: 2026-02-21
+**📈 전체 진행률**: 8/12 Tasks 완료 (67%)
