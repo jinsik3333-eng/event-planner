@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
@@ -22,6 +23,7 @@ import { FormError } from './forms/form-error'
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
+  const [isKakaoLoading, setIsKakaoLoading] = useState(false)
   const {
     register,
     handleSubmit,
@@ -33,8 +35,24 @@ export function LoginForm() {
   })
 
   const onSubmit = async (data: LoginFormData) => {
-    console.log('로그인 데이터:', data)
-    // TODO: 실제 로그인 로직 구현 (Server Action 호출)
+    await signIn('credentials', {
+      email: data.email,
+      password: data.password,
+      redirect: true,
+      redirectTo: '/dashboard',
+    })
+  }
+
+  const handleKakaoSignIn = async () => {
+    setIsKakaoLoading(true)
+    try {
+      await signIn('kakao', {
+        redirect: true,
+        redirectTo: '/dashboard',
+      })
+    } finally {
+      setIsKakaoLoading(false)
+    }
   }
 
   return (
@@ -99,6 +117,27 @@ export function LoginForm() {
             {isSubmitting ? '로그인 중...' : '로그인하기'}
           </Button>
         </form>
+
+        {/* 카카오 로그인 */}
+        <div className="mt-6 space-y-4">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-2 text-gray-500">또는</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleKakaoSignIn}
+            disabled={isKakaoLoading || isSubmitting}
+            className="w-full bg-[#FEE500] text-black hover:bg-[#FDD835]"
+          >
+            {isKakaoLoading ? '카카오 로그인 중...' : '카카오로 로그인'}
+          </Button>
+        </div>
 
         <div className="mt-6 text-center">
           <p className="text-muted-foreground text-sm">

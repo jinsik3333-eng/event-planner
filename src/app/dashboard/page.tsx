@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EventCard } from '@/components/event/event-card'
@@ -25,6 +26,7 @@ interface EventItem {
 
 // 주최자 대시보드 페이지
 export default function DashboardPage() {
+  const { data: session, status } = useSession()
   const [hostedEvents, setHostedEvents] = useState<EventItem[]>([])
   const [participatingEvents, setParticipatingEvents] = useState<EventItem[]>(
     []
@@ -33,12 +35,15 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // TODO: Task 006 완료 후 useSession()으로 실제 사용자 ID 가져오기
-    // 현재는 테스트용 더미 ID 사용
-    const testUserId = 'test-user-id'
+    if (status === 'loading') return
+    if (!session?.user?.id) {
+      setError('사용자 정보를 로드할 수 없습니다.')
+      setIsLoading(false)
+      return
+    }
 
-    loadEvents(testUserId)
-  }, [])
+    loadEvents(session.user.id)
+  }, [session?.user?.id, status])
 
   async function loadEvents(userId: string) {
     try {
