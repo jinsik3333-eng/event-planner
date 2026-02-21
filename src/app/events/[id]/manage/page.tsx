@@ -36,6 +36,44 @@ type EventMember = Database['public']['Tables']['event_members']['Row']
 type Carpool = Database['public']['Tables']['carpools']['Row']
 type Notice = Database['public']['Tables']['notices']['Row']
 
+/**
+ * 모임 관리 페이지 헤더
+ */
+function ManagePageHeader() {
+  const router = useRouter()
+
+  return (
+    <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
+      <Container className="flex items-center justify-between py-3">
+        <button
+          className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
+          onClick={() => router.back()}
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+        <h1 className="flex-1 text-center text-lg font-bold text-gray-900">
+          모임 관리
+        </h1>
+        <button className="rounded-lg p-2 hover:bg-gray-100">
+          <Settings size={20} className="text-gray-700" />
+        </button>
+      </Container>
+    </div>
+  )
+}
+
 export default function ManagePage() {
   const params = useParams()
   const router = useRouter()
@@ -130,34 +168,7 @@ export default function ManagePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
-          <Container className="flex items-center justify-between py-3">
-            <button
-              className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
-              onClick={() => router.back()}
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <h1 className="flex-1 text-center text-lg font-bold text-gray-900">
-              모임 관리
-            </h1>
-            <button className="rounded-lg p-2 hover:bg-gray-100">
-              <Settings size={20} className="text-gray-700" />
-            </button>
-          </Container>
-        </div>
+        <ManagePageHeader />
         <Container className="mt-8 space-y-4">
           <div className="h-40 animate-pulse rounded-lg bg-gray-200" />
           <div className="space-y-3">
@@ -173,34 +184,7 @@ export default function ManagePage() {
   if (error || !event) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20">
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
-          <Container className="flex items-center justify-between py-3">
-            <button
-              className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
-              onClick={() => router.back()}
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <h1 className="flex-1 text-center text-lg font-bold text-gray-900">
-              모임 관리
-            </h1>
-            <button className="rounded-lg p-2 hover:bg-gray-100">
-              <Settings size={20} className="text-gray-700" />
-            </button>
-          </Container>
-        </div>
+        <ManagePageHeader />
         <Container className="mt-8">
           <div className="rounded-lg border border-red-200 bg-red-50 p-6">
             <h2 className="text-lg font-bold text-red-900">
@@ -255,35 +239,7 @@ export default function ManagePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* 뒤로가기 헤더 */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
-        <Container className="flex items-center justify-between py-3">
-          <button
-            className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
-            onClick={() => router.back()}
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <h1 className="flex-1 text-center text-lg font-bold text-gray-900">
-            모임 관리
-          </h1>
-          <button className="rounded-lg p-2 hover:bg-gray-100">
-            <Settings size={20} className="text-gray-700" />
-          </button>
-        </Container>
-      </div>
+      <ManagePageHeader />
 
       {/* 이벤트 정보 카드 */}
       <Container className="py-4">
