@@ -21,7 +21,7 @@ export default function JoinPage() {
   // inviteCode를 seed로 사용하여 같은 code에서는 항상 같은 데이터 생성
   const inviteCode = Array.isArray(params.inviteCode)
     ? params.inviteCode[0]
-    : params.inviteCode
+    : params.inviteCode || 'INVITE001'
   const seed = inviteCode
     .split('')
     .reduce((acc, char) => acc + char.charCodeAt(0), 0)

@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Container } from '@/components/layout/container'
 import { BottomTab } from '@/components/navigation/bottom-tab'
 import { createCompleteMockEvent } from '@/lib/mock-data'
+import { AttendanceStatus, EventStatus } from '@/types/enums'
 
 export default function ManagePage() {
   const params = useParams()
@@ -17,8 +18,8 @@ export default function ManagePage() {
 
   // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
   // params.id를 seed로 사용하여 같은 id에서는 항상 같은 데이터 생성
-  const eventId = Array.isArray(params.id) ? params.id[0] : params.id
-  const seed = parseInt(eventId) || 1
+  const eventId = Array.isArray(params.id) ? params.id[0] : params.id || '1'
+  const seed = parseInt(eventId, 10) || 1
   const mockData = createCompleteMockEvent(undefined, seed)
   const event = {
     id: eventId,
@@ -38,9 +39,15 @@ export default function ManagePage() {
     role: 'MEMBER' as const,
   }))
 
-  const attendingCount = members.filter(m => m.status === 'ATTENDING').length
-  const pendingCount = members.filter(m => m.status === 'PENDING').length
-  const absentCount = members.filter(m => m.status === 'ABSENT').length
+  const attendingCount = members.filter(
+    m => m.status === AttendanceStatus.ATTENDING
+  ).length
+  const undecidedCount = members.filter(
+    m => m.status === AttendanceStatus.UNDECIDED
+  ).length
+  const notAttendingCount = members.filter(
+    m => m.status === AttendanceStatus.NOT_ATTENDING
+  ).length
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -87,12 +94,12 @@ export default function ManagePage() {
               <h2 className="text-lg font-bold text-gray-900">{event.title}</h2>
               <Badge
                 className={
-                  event.status === 'RECRUITING'
+                  event.status === EventStatus.RECRUITING
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'bg-blue-100 text-blue-700'
                 }
               >
-                {event.status === 'RECRUITING' ? '모집 중' : '확정'}
+                {event.status === EventStatus.RECRUITING ? '모집 중' : '확정'}
               </Badge>
             </div>
 
@@ -118,12 +125,14 @@ export default function ManagePage() {
               </div>
               <div className="rounded-lg bg-yellow-50 p-3 text-center">
                 <p className="text-2xl font-bold text-yellow-600">
-                  {pendingCount}
+                  {undecidedCount}
                 </p>
                 <p className="text-xs text-gray-600">미정</p>
               </div>
               <div className="rounded-lg bg-red-50 p-3 text-center">
-                <p className="text-2xl font-bold text-red-600">{absentCount}</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {notAttendingCount}
+                </p>
                 <p className="text-xs text-gray-600">불참</p>
               </div>
             </div>
@@ -159,25 +168,25 @@ export default function ManagePage() {
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">{member.name}</p>
                     <p className="mt-1 text-xs text-gray-600">
-                      {member.status === 'ATTENDING'
+                      {member.status === AttendanceStatus.ATTENDING
                         ? '참석'
-                        : member.status === 'PENDING'
+                        : member.status === AttendanceStatus.UNDECIDED
                           ? '미정'
                           : '불참'}
                     </p>
                   </div>
                   <Badge
                     variant={
-                      member.status === 'ATTENDING'
+                      member.status === AttendanceStatus.ATTENDING
                         ? 'default'
-                        : member.status === 'PENDING'
+                        : member.status === AttendanceStatus.UNDECIDED
                           ? 'secondary'
                           : 'outline'
                     }
                     className={
-                      member.status === 'ATTENDING'
+                      member.status === AttendanceStatus.ATTENDING
                         ? 'bg-emerald-100 text-emerald-700'
-                        : member.status === 'PENDING'
+                        : member.status === AttendanceStatus.UNDECIDED
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-gray-100 text-gray-700'
                     }
@@ -211,7 +220,9 @@ export default function ManagePage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {members
-                  .filter(m => m.status === 'ATTENDING' && !m.hasPaid)
+                  .filter(
+                    m => m.status === AttendanceStatus.ATTENDING && !m.hasPaid
+                  )
                   .map(member => (
                     <div
                       key={member.id}

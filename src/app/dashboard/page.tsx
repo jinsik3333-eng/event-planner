@@ -26,7 +26,9 @@ interface EventItem {
 // 주최자 대시보드 페이지
 export default function DashboardPage() {
   const [hostedEvents, setHostedEvents] = useState<EventItem[]>([])
-  const [participatingEvents, setParticipatingEvents] = useState<EventItem[]>([])
+  const [participatingEvents, setParticipatingEvents] = useState<EventItem[]>(
+    []
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -65,14 +67,14 @@ export default function DashboardPage() {
       }
 
       setHostedEvents(
-        (response.data.hosted as Event[]).map((event) =>
-          transformEvent(event, Math.floor(Math.random() * 20) + 1),
-        ),
+        (response.data.hosted as Event[]).map(event =>
+          transformEvent(event, Math.floor(Math.random() * 20) + 1)
+        )
       )
       setParticipatingEvents(
-        (response.data.participating as Event[]).map((event) =>
-          transformEvent(event, Math.floor(Math.random() * 20) + 1),
-        ),
+        (response.data.participating as Event[]).map(event =>
+          transformEvent(event, Math.floor(Math.random() * 20) + 1)
+        )
       )
       setError(null)
     } catch (err) {
@@ -165,23 +167,18 @@ export default function DashboardPage() {
               주최 중인 모임
             </h2>
             <div className="space-y-4">
-              {myEvents.filter((e) => e.status !== 'COMPLETED').length === 0 ? (
+              {myEvents.filter(e => e.status !== 'ENDED').length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 py-12">
-                  <p className="text-gray-600">
-                    아직 생성한 모임이 없습니다.
-                  </p>
+                  <p className="text-gray-600">아직 생성한 모임이 없습니다.</p>
                   <p className="mt-2 text-sm text-gray-500">
                     위의 버튼을 눌러 새 모임을 만들어보세요.
                   </p>
                 </div>
               ) : (
                 myEvents
-                  .filter((e) => e.status !== 'COMPLETED')
-                  .map((event) => (
-                    <Link
-                      key={event.id}
-                      href={`/events/${event.id}/manage`}
-                    >
+                  .filter(e => e.status !== 'ENDED')
+                  .map(event => (
+                    <Link key={event.id} href={`/events/${event.id}/manage`}>
                       <EventCard {...event} />
                     </Link>
                   ))
@@ -198,8 +195,8 @@ export default function DashboardPage() {
             </h2>
             <div className="space-y-4">
               {participatingEvents
-                .filter((e) => e.status !== 'COMPLETED')
-                .map((event) => (
+                .filter(e => e.status !== 'ENDED')
+                .map(event => (
                   <Link key={event.id} href={`/events/${event.id}`}>
                     <EventCard {...event} />
                   </Link>
@@ -209,20 +206,23 @@ export default function DashboardPage() {
         )}
 
         {/* 지난 모임 */}
-        {!isLoading && myEvents.filter((e) => e.status === 'COMPLETED').length > 0 && (
-          <section>
-            <h2 className="mb-4 text-base font-bold text-gray-900">지난 모임</h2>
-            <div className="space-y-4">
-              {myEvents
-                .filter((e) => e.status === 'COMPLETED')
-                .map((event) => (
-                  <Link key={event.id} href={`/events/${event.id}`}>
-                    <EventCard {...event} />
-                  </Link>
-                ))}
-            </div>
-          </section>
-        )}
+        {!isLoading &&
+          myEvents.filter(e => e.status === 'ENDED').length > 0 && (
+            <section>
+              <h2 className="mb-4 text-base font-bold text-gray-900">
+                지난 모임
+              </h2>
+              <div className="space-y-4">
+                {myEvents
+                  .filter(e => e.status === 'ENDED')
+                  .map(event => (
+                    <Link key={event.id} href={`/events/${event.id}`}>
+                      <EventCard {...event} />
+                    </Link>
+                  ))}
+              </div>
+            </section>
+          )}
       </Container>
 
       {/* 하단 탭 네비게이션 */}

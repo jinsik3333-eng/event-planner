@@ -25,9 +25,10 @@ function generateId(seed?: number): string {
   }
 
   // 시드 기반 생성
+  let currentSeed = seed || 0
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-    seed = (seed * 9301 + 49297) % 233280
-    const r = ((seed / 233280) * 16) | 0
+    currentSeed = (currentSeed * 9301 + 49297) % 233280
+    const r = ((currentSeed / 233280) * 16) | 0
     const v = c === 'x' ? r : (r & 0x3) | 0x8
     return v.toString(16)
   })
@@ -71,10 +72,7 @@ export function mockUser(overrides?: Partial<User>): User {
  */
 export function mockEvent(overrides?: Partial<Event>, seed?: number): Event {
   // 시드가 있으면 시드 기반, 없으면 시간 기반
-  let baseSeed = seed
-  if (!seed) {
-    baseSeed = Date.now()
-  }
+  const baseSeed: number = seed || Date.now()
 
   const daysFromNow = Math.floor(seededRandom(baseSeed) * 60) + 7
 

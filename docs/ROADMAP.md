@@ -134,20 +134,29 @@
 > ⚠️ Task 002-4 완료 후 Task 005 시작 (Phase 2 모든 태스크 완료 필수)
 
 - **Task 005: Supabase 데이터베이스 구축 및 API 개발**
-  - Supabase 프로젝트 생성 및 PostgreSQL 연결
-  - 데이터베이스 테이블 생성 (User, Event, EventMember, Notice, Carpool)
-    - RLS(Row Level Security) 정책 설정
-    - 인덱스 및 외래키 제약조건 설정
+  - ✅ Supabase 프로젝트 생성 및 PostgreSQL 연결
+  - ✅ 데이터베이스 테이블 생성 (User, Event, EventMember, Notice, Carpool)
+    - ✅ RLS(Row Level Security) 정책 설정
+    - ✅ 인덱스 및 외래키 제약조건 설정
   - Server Actions 기반 데이터 접근 레이어 구현
-    - 이벤트 CRUD (생성/조회/수정/삭제) - F001
-    - 초대 코드 생성 (nanoid 기반) - F002
-    - 참여자 관리 (참석 의사 표시, 목록 조회) - F003, F004
-    - 정산 관리 (금액 계산, 납부 상태 업데이트) - F005
-    - 카풀 관리 (운전자 등록, 탑승자 신청/취소) - F006
-    - 공지사항 CRUD - F007
-  - 더미 데이터를 실제 API 호출로 교체
+    - ✅ 이벤트 CRUD (생성/조회/수정/삭제) - F001 **[Task 005-2]**
+      - ✅ createEvent() - 초대코드 자동 생성 (nanoid)
+      - ✅ getEvent() - 참여자 통계 포함
+      - ✅ updateEvent() - 주최자만 수정 가능
+      - ✅ deleteEvent() - 주최자만 삭제 가능
+      - ✅ listUserEvents() - 주최/참여 모임 구분
+      - ✅ getEventByInviteCode() - 게스트 접근 가능
+    - 참여자 관리 (참석 의사 표시, 목록 조회) - F003, F004 **[Task 005-3]**
+    - 정산 관리 (금액 계산, 납부 상태 업데이트) - F005 **[Task 005-4]**
+    - 카풀 관리 (운전자 등록, 탑승자 신청/취소) - F006 **[Task 005-5]**
+    - 공지사항 CRUD - F007 **[Task 005-6]**
+  - 폼 컴포넌트 생성
+    - ✅ CreateEventForm - React Hook Form + Zod 구현
+    - ✅ AttendanceForm - 참석 의사 표시 폼
+    - ✅ CarpoolForm - 카풀 등록 폼
+  - 더미 데이터를 실제 API 호출로 교체 (Task 007에서 수행)
   - ## 테스트 체크리스트
-    - 이벤트 생성/조회/수정/삭제 API 동작 검증
+    - ✅ 이벤트 생성/조회/수정/삭제 API 동작 검증
     - 참여자 참석 의사 표시 및 현황 조회 테스트
     - 정산 금액 계산 정확성 검증
     - 카풀 등록/신청/취소 플로우 테스트
