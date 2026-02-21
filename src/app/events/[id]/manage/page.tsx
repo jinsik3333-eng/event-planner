@@ -2,32 +2,63 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { MapPin, Clock, Users, Share2, Settings } from 'lucide-react'
+import {
+  MapPin,
+  Clock,
+  Users,
+  Share2,
+  Settings,
+  AlertCircle,
+  CheckCircle,
+  Edit2,
+  Trash2,
+  MessageCircle,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Container } from '@/components/layout/container'
 import { BottomTab } from '@/components/navigation/bottom-tab'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { CarpoolForm } from '@/components/forms/carpool-form'
 import { getEvent } from '@/actions/events'
 import { getEventMembers } from '@/actions/attendance'
+import { updatePaymentStatus } from '@/actions/settlement'
+import {
+  getCarpools,
+  getCarpool,
+  createCarpool,
+  joinCarpool,
+} from '@/actions/carpool'
+import { getNotices, createNotice, deleteNotice } from '@/actions/notices'
+import { useCurrentUserId } from '@/hooks/useAuth'
 import type { GetEventResponse } from '@/types/api'
 import type { Database } from '@/lib/supabase'
 
 type EventMember = Database['public']['Tables']['event_members']['Row']
+type Carpool = Database['public']['Tables']['carpools']['Row']
+type Notice = Database['public']['Tables']['notices']['Row']
 
 export default function ManagePage() {
   const params = useParams()
   const router = useRouter()
+  const currentUserId = useCurrentUserId()
   const [activeTab, setActiveTab] = useState('members')
   const [event, setEvent] = useState<GetEventResponse | null>(null)
   const [members, setMembers] = useState<EventMember[]>([])
+  const [carpools, setCarpools] = useState<Carpool[]>([])
+  const [notices, setNotices] = useState<Notice[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showShareModal, setShowShareModal] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [kakaoPayLink, setKakaoPayLink] = useState('')
+  const [noticeContent, setNoticeContent] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // 이벤트 및 참여자 정보 로드
+  // 이벤트, 참여자, 카풀, 공지사항 정보 로드
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -58,6 +89,19 @@ export default function ManagePage() {
         }
 
         setMembers(membersResponse.data || [])
+
+        // 카풀 정보 조회
+        const carpoolsResponse = await getCarpools(eventId)
+        if (carpoolsResponse.success) {
+          setCarpools(carpoolsResponse.data || [])
+        }
+
+        // 공지사항 조회
+        const noticesResponse = await getNotices(eventId)
+        if (noticesResponse.success) {
+          setNotices(noticesResponse.data || [])
+        }
+
         setError(null)
       } catch (err) {
         const message =
@@ -320,10 +364,11 @@ export default function ManagePage() {
       {/* 탭 네비게이션 */}
       <Container className="py-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="members">참여자</TabsTrigger>
             <TabsTrigger value="settlement">정산</TabsTrigger>
             <TabsTrigger value="carpool">카풀</TabsTrigger>
+            <TabsTrigger value="notice">공지</TabsTrigger>
           </TabsList>
 
           {/* 참여자 탭 */}
@@ -371,44 +416,162 @@ export default function ManagePage() {
 
           {/* 정산 탭 */}
           <TabsContent value="settlement" className="mt-4 space-y-4">
+            {/* 정산 현황 */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">총 수입</CardTitle>
+                <CardTitle className="text-base">정산 현황</CardTitle>
               </CardHeader>
-              <CardContent className="text-center">
-                <p className="mt-2 text-3xl font-bold text-emerald-600">
-                  {(attendingCount * event.fee).toLocaleString()}원
-                </p>
-                <p className="mt-2 text-sm text-gray-600">
-                  {attendingCount}명 × {event.fee.toLocaleString()}원
-                </p>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="text-xs text-gray-600">1인당 금액</p>
+                  <p className="mt-1 text-2xl font-bold text-emerald-600">
+                    {attendingCount > 0
+                      ? Math.ceil(event.fee / attendingCount).toLocaleString()
+                      : 0}
+                    원
+                  </p>
+                </div>
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg bg-emerald-50 p-3 text-center">
+                      <p className="text-sm font-semibold text-emerald-700">
+                        납부 완료
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-emerald-600">
+                        {
+                          members.filter(
+                            m => m.status === 'ATTENDING' && m.has_paid
+                          ).length
+                        }
+                      </p>
+                    </div>
+                    <div className="rounded-lg bg-red-50 p-3 text-center">
+                      <p className="text-sm font-semibold text-red-700">
+                        미납자
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-red-600">
+                        {
+                          members.filter(
+                            m => m.status === 'ATTENDING' && !m.has_paid
+                          ).length
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
+            {/* 카카오페이 링크 */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">미납자</CardTitle>
+                <CardTitle className="text-base">결제 정보</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="kakao-pay">카카오페이 링크</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="kakao-pay"
+                      type="url"
+                      placeholder="https://..."
+                      value={kakaoPayLink}
+                      onChange={e => setKakaoPayLink(e.target.value)}
+                      className="text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        if (kakaoPayLink && event) {
+                          try {
+                            await navigator.clipboard.writeText(kakaoPayLink)
+                            alert('링크가 복사되었습니다.')
+                          } catch {
+                            alert('복사에 실패했습니다.')
+                          }
+                        }
+                      }}
+                    >
+                      복사
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    참여자들이 쉽게 접근할 수 있는 결제 링크를 입력하세요.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* 미납자 목록 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <AlertCircle size={18} className="text-red-600" />
+                  미납자 목록
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {members.filter(m => m.status === 'ATTENDING' && !m.has_paid)
                   .length === 0 ? (
-                  <p className="py-4 text-center text-gray-600">
-                    미납자가 없습니다.
-                  </p>
+                  <div className="flex items-center justify-center gap-2 py-6 text-green-600">
+                    <CheckCircle size={20} />
+                    <p>모든 참석자가 납부를 완료했습니다!</p>
+                  </div>
                 ) : (
                   members
                     .filter(m => m.status === 'ATTENDING' && !m.has_paid)
                     .map(member => (
                       <div
                         key={member.id}
-                        className="flex justify-between border-b border-gray-200 py-2"
+                        className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-3 py-2"
                       >
-                        <span className="text-gray-900">
-                          {member.guest_name || 'Guest User'}
-                        </span>
-                        <span className="font-semibold text-red-600">
-                          {event.fee.toLocaleString()}원
-                        </span>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900">
+                            {member.guest_name || 'Guest User'}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {event.fee.toLocaleString()}원
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            try {
+                              setIsSubmitting(true)
+                              const result = await updatePaymentStatus({
+                                eventId: event.id,
+                                memberId: member.id,
+                                hasPaid: true,
+                              })
+                              if (result.success) {
+                                setMembers(
+                                  members.map(m =>
+                                    m.id === member.id
+                                      ? { ...m, has_paid: true }
+                                      : m
+                                  )
+                                )
+                                alert('납부 상태가 업데이트되었습니다.')
+                              } else {
+                                alert(
+                                  result.error || '업데이트에 실패했습니다.'
+                                )
+                              }
+                            } catch (err) {
+                              alert(
+                                err instanceof Error
+                                  ? err.message
+                                  : '오류가 발생했습니다.'
+                              )
+                            } finally {
+                              setIsSubmitting(false)
+                            }
+                          }}
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? '처리 중...' : '완료'}
+                        </Button>
                       </div>
                     ))
                 )}
@@ -418,10 +581,255 @@ export default function ManagePage() {
 
           {/* 카풀 탭 */}
           <TabsContent value="carpool" className="mt-4 space-y-4">
-            <div className="py-12 text-center">
-              <Users size={48} className="mx-auto mb-4 text-gray-300" />
-              <p className="text-gray-600">아직 카풀 신청이 없습니다.</p>
-            </div>
+            {/* 운전자 등록 폼 */}
+            <CarpoolForm
+              onSubmit={async data => {
+                if (!event || !currentUserId) return
+                try {
+                  setIsSubmitting(true)
+                  const result = await createCarpool(currentUserId, {
+                    eventId: event.id,
+                    seats: data.seats,
+                    departure: data.departure,
+                  })
+                  if (result.success && result.data) {
+                    setCarpools([result.data, ...carpools])
+                    alert('카풀이 등록되었습니다.')
+                  } else {
+                    alert(result.error || '등록에 실패했습니다.')
+                  }
+                } catch (err) {
+                  alert(
+                    err instanceof Error ? err.message : '오류가 발생했습니다.'
+                  )
+                } finally {
+                  setIsSubmitting(false)
+                }
+              }}
+              isLoading={isSubmitting}
+            />
+
+            {/* 카풀 목록 */}
+            {carpools.length === 0 ? (
+              <div className="py-8 text-center">
+                <Users size={40} className="mx-auto mb-3 text-gray-300" />
+                <p className="text-gray-600">아직 등록된 카풀이 없습니다.</p>
+              </div>
+            ) : (
+              carpools.map(carpool => (
+                <Card key={carpool.id}>
+                  <CardContent className="space-y-3 p-4">
+                    {/* 카풀 정보 */}
+                    <div>
+                      <p className="text-sm text-gray-600">출발 장소</p>
+                      <p className="font-semibold text-gray-900">
+                        {carpool.departure}
+                      </p>
+                    </div>
+
+                    {/* 정원 현황 */}
+                    <div className="rounded-lg bg-blue-50 p-3">
+                      <p className="mb-2 text-xs font-medium text-gray-600">
+                        탑승 현황
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <div className="h-2 w-full rounded-full bg-gray-200">
+                            <div
+                              className="h-full rounded-full bg-emerald-500"
+                              style={{
+                                width: `${(0 / carpool.seats) * 100}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <span className="text-sm font-semibold text-gray-900">
+                          0 / {carpool.seats}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* 액션 버튼 */}
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-xs"
+                        onClick={async () => {
+                          if (!currentUserId) return
+                          try {
+                            setIsSubmitting(true)
+                            const result = await joinCarpool(currentUserId, {
+                              carpoolId: carpool.id,
+                              userId: currentUserId,
+                            })
+                            if (result.success) {
+                              alert('카풀 신청이 완료되었습니다.')
+                            } else {
+                              alert(result.error || '신청에 실패했습니다.')
+                            }
+                          } catch (err) {
+                            alert(
+                              err instanceof Error
+                                ? err.message
+                                : '오류가 발생했습니다.'
+                            )
+                          } finally {
+                            setIsSubmitting(false)
+                          }
+                        }}
+                        disabled={isSubmitting}
+                      >
+                        탑승 신청
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-xs"
+                      >
+                        상세보기
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </TabsContent>
+          {/* 공지사항 탭 */}
+          <TabsContent value="notice" className="mt-4 space-y-4">
+            {/* 공지사항 작성 폼 */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MessageCircle size={18} />새 공지사항 작성
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="notice-content">내용</Label>
+                  <textarea
+                    id="notice-content"
+                    placeholder="참석자들에게 전달할 공지사항을 입력하세요."
+                    rows={3}
+                    value={noticeContent}
+                    onChange={e => setNoticeContent(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-900 focus:outline-none"
+                  />
+                </div>
+                <Button
+                  onClick={async () => {
+                    if (!event || !currentUserId || !noticeContent.trim())
+                      return
+                    try {
+                      setIsSubmitting(true)
+                      const result = await createNotice(currentUserId, {
+                        eventId: event.id,
+                        content: noticeContent,
+                      })
+                      if (result.success && result.data) {
+                        setNotices([result.data, ...notices])
+                        setNoticeContent('')
+                        alert('공지사항이 작성되었습니다.')
+                      } else {
+                        alert(result.error || '작성에 실패했습니다.')
+                      }
+                    } catch (err) {
+                      alert(
+                        err instanceof Error
+                          ? err.message
+                          : '오류가 발생했습니다.'
+                      )
+                    } finally {
+                      setIsSubmitting(false)
+                    }
+                  }}
+                  disabled={isSubmitting || !noticeContent.trim()}
+                  className="w-full"
+                >
+                  {isSubmitting ? '작성 중...' : '공지하기'}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* 공지사항 목록 */}
+            {notices.length === 0 ? (
+              <div className="py-8 text-center">
+                <MessageCircle
+                  size={40}
+                  className="mx-auto mb-3 text-gray-300"
+                />
+                <p className="text-gray-600">아직 공지사항이 없습니다.</p>
+              </div>
+            ) : (
+              notices.map(notice => (
+                <Card key={notice.id}>
+                  <CardContent className="space-y-2 p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm whitespace-pre-wrap text-gray-900">
+                          {notice.content}
+                        </p>
+                        <p className="mt-2 text-xs text-gray-600">
+                          {new Date(notice.created_at).toLocaleDateString(
+                            'ko-KR',
+                            {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            }
+                          )}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            // 수정 기능은 추후 구현
+                            alert('수정 기능은 준비 중입니다.')
+                          }}
+                        >
+                          <Edit2 size={16} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={async () => {
+                            if (!confirm('이 공지사항을 삭제하시겠습니까?')) {
+                              return
+                            }
+                            try {
+                              setIsSubmitting(true)
+                              const result = await deleteNotice(notice.id)
+                              if (result.success) {
+                                setNotices(
+                                  notices.filter(n => n.id !== notice.id)
+                                )
+                                alert('삭제되었습니다.')
+                              } else {
+                                alert(result.error || '삭제에 실패했습니다.')
+                              }
+                            } catch (err) {
+                              alert(
+                                err instanceof Error
+                                  ? err.message
+                                  : '오류가 발생했습니다.'
+                              )
+                            } finally {
+                              setIsSubmitting(false)
+                            }
+                          }}
+                          disabled={isSubmitting}
+                        >
+                          <Trash2 size={16} className="text-red-600" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </Container>
