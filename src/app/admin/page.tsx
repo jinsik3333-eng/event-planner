@@ -1,10 +1,10 @@
-import { BarChart3, Users, Calendar, Wallet, Car, LogOut } from 'lucide-react'
+import { BarChart3, Users, Calendar, Wallet, Car } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Container } from '@/components/layout/container'
-import { signOut } from 'next-auth/react'
 import { getAdminStats, getAdminEvents } from '@/actions/admin'
 import { getCurrentUser } from '@/actions/auth'
+import { SignOutButton } from '@/components/admin/signout-button'
 
 // 관리자 대시보드 (데스크톱 전용)
 export default async function AdminPage() {
@@ -68,21 +68,7 @@ export default async function AdminPage() {
         </nav>
 
         <div className="border-t border-gray-800 p-4">
-          <form
-            action={async () => {
-              'use server'
-              await signOut({ redirect: true })
-            }}
-          >
-            <Button
-              type="submit"
-              variant="outline"
-              className="w-full border-gray-700 text-white hover:bg-gray-800"
-            >
-              <LogOut size={18} className="mr-2" />
-              로그아웃
-            </Button>
-          </form>
+          <SignOutButton />
         </div>
       </div>
 

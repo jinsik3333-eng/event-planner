@@ -9,7 +9,8 @@ import { supabaseAdmin } from '@/lib/supabase'
  * 현재 로그인한 사용자 정보 조회
  */
 export async function getCurrentUser() {
-  const session = await getServerSession()
+  const { authOptions } = await import('@/app/api/auth/[...nextauth]/route')
+  const session = await getServerSession(authOptions)
   return session?.user || null
 }
 
