@@ -26,8 +26,7 @@ export function CarpoolForm({ onSubmit, isLoading }: CarpoolFormProps) {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreateCarpoolFormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(createCarpoolSchema) as any,
+    resolver: zodResolver(createCarpoolSchema),
     mode: 'onBlur',
   })
 

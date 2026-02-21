@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import {
   MapPin,
   Clock,
@@ -37,13 +38,29 @@ type Carpool = Database['public']['Tables']['carpools']['Row']
 type Notice = Database['public']['Tables']['notices']['Row']
 
 /**
+ * 참석 상태를 한글로 변환
+ */
+function mapAttendanceStatus(status: string): string {
+  switch (status) {
+    case 'ATTENDING':
+      return '참석'
+    case 'PENDING':
+      return '미정'
+    case 'NOT_ATTENDING':
+      return '불참'
+    default:
+      return status
+  }
+}
+
+/**
  * 모임 관리 페이지 헤더
  */
 function ManagePageHeader() {
   const router = useRouter()
 
   return (
-    <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
+    <div className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
       <Container className="flex items-center justify-between py-3">
         <button
           className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
@@ -157,6 +174,18 @@ export default function ManagePage() {
     loadData()
   }, [params.id])
 
+  // 모달의 ESC 키 처리
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showShareModal && e.key === 'Escape') {
+        setShowShareModal(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showShareModal])
+
   // 참여 현황 계산
   const attendingCount = members.filter(m => m.status === 'ATTENDING').length
   const undecidedCount = members.filter(m => m.status === 'PENDING').length
@@ -167,7 +196,7 @@ export default function ManagePage() {
   // 로딩 상태
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-gray-50 pb-20 dark:bg-gray-950">
         <ManagePageHeader />
         <Container className="mt-8 space-y-4">
           <div className="h-40 animate-pulse rounded-lg bg-gray-200" />
@@ -183,11 +212,11 @@ export default function ManagePage() {
   // 에러 상태
   if (error || !event) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20">
+      <div className="min-h-screen bg-gray-50 pb-20 dark:bg-gray-950">
         <ManagePageHeader />
         <Container className="mt-8">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6">
-            <h2 className="text-lg font-bold text-red-900">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950">
+            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">
               오류가 발생했습니다
             </h2>
             <p className="mt-2 text-sm text-red-800">
@@ -205,23 +234,10 @@ export default function ManagePage() {
     )
   }
 
-  const mapAttendanceStatus = (status: string) => {
-    switch (status) {
-      case 'ATTENDING':
-        return '참석'
-      case 'PENDING':
-        return '미정'
-      case 'NOT_ATTENDING':
-        return '불참'
-      default:
-        return status
-    }
-  }
-
   // 초대 링크 생성
   const getInviteLink = () => {
     if (!event) return ''
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     return `${baseUrl}/join/${event.invite_code}`
   }
 
@@ -232,13 +248,14 @@ export default function ManagePage() {
       await navigator.clipboard.writeText(link)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+      toast.success('링크가 복사되었습니다.')
     } catch {
-      alert('링크 복사에 실패했습니다.')
+      toast.error('링크 복사에 실패했습니다.')
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20 dark:bg-gray-950">
       <ManagePageHeader />
 
       {/* 이벤트 정보 카드 */}
@@ -754,10 +771,8 @@ export default function ManagePage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => {
-                            // 수정 기능은 추후 구현
-                            alert('수정 기능은 준비 중입니다.')
-                          }}
+                          disabled
+                          title="수정 기능은 준비 중입니다."
                         >
                           <Edit2 size={16} />
                         </Button>
@@ -775,12 +790,14 @@ export default function ManagePage() {
                                 setNotices(
                                   notices.filter(n => n.id !== notice.id)
                                 )
-                                alert('삭제되었습니다.')
+                                toast.success('삭제되었습니다.')
                               } else {
-                                alert(result.error || '삭제에 실패했습니다.')
+                                toast.error(
+                                  result.error || '삭제에 실패했습니다.'
+                                )
                               }
                             } catch (err) {
-                              alert(
+                              toast.error(
                                 err instanceof Error
                                   ? err.message
                                   : '오류가 발생했습니다.'
@@ -808,16 +825,16 @@ export default function ManagePage() {
 
       {/* 초대 링크 공유 모달 */}
       {showShareModal && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/50">
-          <div className="w-full rounded-t-lg bg-white p-6">
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50 dark:bg-black/70">
+          <div className="w-full rounded-t-lg bg-white p-6 dark:bg-gray-900">
             {/* 헤더 */}
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
                 초대 링크 공유
               </h2>
               <button
                 onClick={() => setShowShareModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
               >
                 <svg
                   className="h-6 w-6"
@@ -837,7 +854,7 @@ export default function ManagePage() {
 
             {/* 초대 링크 */}
             <div className="mb-4 space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 초대 링크
               </label>
               <div className="flex gap-2">
@@ -845,7 +862,7 @@ export default function ManagePage() {
                   type="text"
                   readOnly
                   value={getInviteLink()}
-                  className="flex-1 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-700"
+                  className="flex-1 rounded-lg border border-gray-300 bg-gray-50 px-4 py-2 text-sm text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                 />
                 <Button
                   onClick={copyToClipboard}
@@ -862,7 +879,9 @@ export default function ManagePage() {
 
             {/* 공유 방법 */}
             <div className="mb-4 space-y-2">
-              <p className="text-sm font-medium text-gray-700">공유 방법</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                공유 방법
+              </p>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -879,15 +898,16 @@ export default function ManagePage() {
                       // Web Share API 지원 확인
                       if (navigator.share) {
                         await navigator.share(shareData)
+                        toast.success('공유되었습니다.')
                       } else {
                         // 폴백: 클립보드에 복사
                         await copyToClipboard()
-                        alert('링크가 클립보드에 복사되었습니다.')
                       }
                     } catch (err) {
                       // 사용자가 공유를 취소한 경우나 기타 오류
                       if (err instanceof Error && err.name !== 'AbortError') {
                         console.error('공유 실패:', err)
+                        toast.error('공유에 실패했습니다.')
                       }
                     }
                   }}
