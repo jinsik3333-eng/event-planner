@@ -1,48 +1,54 @@
-'use client'
-
 import { BarChart3, Users, Calendar, Wallet, Car, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Container } from '@/components/layout/container'
+import { signOut } from 'next-auth/react'
+import { getAdminStats, getAdminEvents } from '@/actions/admin'
+import { getCurrentUser } from '@/actions/auth'
 
 // 관리자 대시보드 (데스크톱 전용)
-export default function AdminPage() {
-  // 목 데이터 생성 (임시 - 실제로는 Server Action으로 페칭)
-  // 고정 seed를 사용하여 hydration 문제 방지
-  const mockEvents = Array.from({ length: 5 }, (_, i) => {
-    const seed = 2000 + i
-    return {
-      id: `admin-event-${i + 1}`,
-      title: `모임_${seed % 10000}`,
-      description: '즐거운 모임입니다.',
-      hostId: `host-${i + 1}`,
-      date: new Date(Date.now() + (i + 7) * 24 * 60 * 60 * 1000),
-      location: '서울시 강남구',
-      fee: (i % 5) * 10000,
-      maxAttendees: 20 + i * 5,
-      status: 'RECRUITING',
-      inviteCode: `CODE${i + 1}`,
-      image: 'https://via.placeholder.com/400x200?text=Event',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-  })
+export default async function AdminPage() {
+  // 현재 사용자 확인
+  const user = await getCurrentUser()
 
-  const stats = {
-    totalEvents: 345,
-    activeUsers: 1200,
-    thisMonthRevenue: 1500000,
-    totalRevenue: 12500000,
+  // 관리자가 아니면 접근 불가 (미들웨어에서 처리되지만 여기서도 한번 더 확인)
+  if (!user?.isAdmin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <p className="mb-4 text-center text-gray-600">
+              관리자 권한이 필요합니다.
+            </p>
+            <Button className="w-full" variant="outline">
+              대시보드로 이동
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
-  const recentEvents = mockEvents.map((event, idx) => ({
-    id: event.id,
-    title: event.title,
-    attendees: 5 + idx * 4,
-    maxAttendees: event.maxAttendees || 50,
-    revenue: event.fee * (5 + idx * 4),
-    status: idx % 2 === 0 ? 'RECRUITING' : 'CONFIRMED',
-  }))
+  // 통계 데이터 조회
+  const statsResponse = await getAdminStats()
+  const stats =
+    statsResponse.success && statsResponse.data
+      ? statsResponse.data
+      : {
+          totalEvents: 0,
+          activeUsers: 0,
+          thisMonthRevenue: 0,
+          totalRevenue: 0,
+        }
+
+  // 모임 목록 조회 (최신 5개)
+  const eventsResponse = await getAdminEvents({
+    sortBy: 'date',
+    order: 'desc',
+    limit: 5,
+  })
+  const recentEvents =
+    eventsResponse.success && eventsResponse.data ? eventsResponse.data : []
 
   return (
     <div className="hidden min-h-screen w-full !max-w-none bg-gray-100 md:flex">
@@ -62,13 +68,21 @@ export default function AdminPage() {
         </nav>
 
         <div className="border-t border-gray-800 p-4">
-          <Button
-            variant="outline"
-            className="w-full border-gray-700 text-white hover:bg-gray-800"
+          <form
+            action={async () => {
+              'use server'
+              await signOut({ redirect: true })
+            }}
           >
-            <LogOut size={18} className="mr-2" />
-            로그아웃
-          </Button>
+            <Button
+              type="submit"
+              variant="outline"
+              className="w-full border-gray-700 text-white hover:bg-gray-800"
+            >
+              <LogOut size={18} className="mr-2" />
+              로그아웃
+            </Button>
+          </form>
         </div>
       </div>
 
@@ -98,7 +112,7 @@ export default function AdminPage() {
                 </svg>
               </button>
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 font-bold text-white">
-                A
+                {user?.name?.[0]?.toUpperCase() || 'A'}
               </div>
             </div>
           </Container>
@@ -149,63 +163,77 @@ export default function AdminPage() {
                 <CardTitle className="text-base">모임 목록</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="border-b border-gray-200 bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                          모임명
-                        </th>
-                        <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                          참석
-                        </th>
-                        <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                          정원
-                        </th>
-                        <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                          매출
-                        </th>
-                        <th className="px-4 py-3 text-left font-semibold text-gray-700">
-                          상태
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentEvents.map(event => (
-                        <tr
-                          key={event.id}
-                          className="border-b border-gray-200 hover:bg-gray-50"
-                        >
-                          <td className="px-4 py-3 font-medium text-gray-900">
-                            {event.title}
-                          </td>
-                          <td className="px-4 py-3 text-gray-600">
-                            {event.attendees}명
-                          </td>
-                          <td className="px-4 py-3 text-gray-600">
-                            {event.maxAttendees}명
-                          </td>
-                          <td className="px-4 py-3 font-medium text-gray-900">
-                            {event.revenue.toLocaleString()}원
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
-                                event.status === 'RECRUITING'
-                                  ? 'bg-emerald-100 text-emerald-700'
-                                  : 'bg-blue-100 text-blue-700'
-                              }`}
-                            >
-                              {event.status === 'RECRUITING'
-                                ? '모집 중'
-                                : '확정'}
-                            </span>
-                          </td>
+                {recentEvents.length === 0 ? (
+                  <p className="text-center text-gray-500">모임이 없습니다.</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="border-b border-gray-200 bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                            모임명
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                            주최자
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                            참석
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                            정원
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                            매출
+                          </th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-700">
+                            상태
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {recentEvents.map(event => (
+                          <tr
+                            key={event.id}
+                            className="border-b border-gray-200 hover:bg-gray-50"
+                          >
+                            <td className="px-4 py-3 font-medium text-gray-900">
+                              {event.title}
+                            </td>
+                            <td className="px-4 py-3 text-gray-600">
+                              {event.hostName}
+                            </td>
+                            <td className="px-4 py-3 text-gray-600">
+                              {event.attendeeCount}명
+                            </td>
+                            <td className="px-4 py-3 text-gray-600">
+                              {event.maxAttendees || '제한 없음'}
+                            </td>
+                            <td className="px-4 py-3 font-medium text-gray-900">
+                              {event.revenue.toLocaleString()}원
+                            </td>
+                            <td className="px-4 py-3">
+                              <span
+                                className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ${
+                                  event.status === 'RECRUITING'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : event.status === 'CONFIRMED'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'bg-gray-100 text-gray-700'
+                                }`}
+                              >
+                                {event.status === 'RECRUITING'
+                                  ? '모집 중'
+                                  : event.status === 'CONFIRMED'
+                                    ? '확정'
+                                    : '종료'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

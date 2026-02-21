@@ -1,14 +1,25 @@
 import { withAuth } from 'next-auth/middleware'
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export const middleware = withAuth(
   function middleware(req: NextRequest) {
-    // 미들웨어 로직이 필요하면 여기에 추가
     return undefined
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req: middlewareReq }) => {
+        // 기본 인증 확인
+        if (!token) {
+          return false
+        }
+
+        // /admin 라우트에 대한 관리자 권한 검증
+        if (middlewareReq.nextUrl.pathname.startsWith('/admin')) {
+          return token.isAdmin === true
+        }
+
+        return true
+      },
     },
     pages: {
       signIn: '/login',
