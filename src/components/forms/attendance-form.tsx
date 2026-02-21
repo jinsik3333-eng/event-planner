@@ -107,14 +107,14 @@ export function AttendanceForm({
                 className="border-input hover:bg-accent flex cursor-pointer items-center space-x-3 rounded-lg border p-3"
                 style={{
                   borderColor:
-                    status === AttendanceStatus.UNDECIDED
+                    status === AttendanceStatus.PENDING
                       ? '#2563eb'
                       : 'hsl(var(--input))',
                 }}
               >
                 <input
                   type="radio"
-                  value={AttendanceStatus.UNDECIDED}
+                  value={AttendanceStatus.PENDING}
                   {...register('status')}
                   className="h-4 w-4 cursor-pointer"
                 />

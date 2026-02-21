@@ -50,8 +50,37 @@ export interface UpdateEventRequest {
 /**
  * 이벤트 조회 응답 DTO
  * 이벤트 상세 정보 + 통계 데이터
+ * Supabase의 raw 데이터 구조를 반영하여 snake_case 필드 사용
  */
-export interface GetEventResponse extends Event {
+export interface GetEventResponse {
+  /** 이벤트 ID */
+  id: string
+  /** 이벤트 제목 */
+  title: string
+  /** 이벤트 설명 */
+  description?: string | null
+  /** 주최자 ID */
+  host_id: string
+  /** 이벤트 날짜 (ISO 문자열) */
+  date: string
+  /** 이벤트 장소 */
+  location: string
+  /** 참가비 */
+  fee: number
+  /** 최대 참석 인원 */
+  max_attendees?: number | null
+  /** 이벤트 상태 */
+  status: 'RECRUITING' | 'CONFIRMED' | 'COMPLETED'
+  /** 초대 코드 */
+  invite_code: string
+  /** 카카오페이 URL */
+  kakao_pay_url?: string | null
+  /** 이벤트 이미지 URL */
+  image?: string | null
+  /** 생성 일시 */
+  created_at: string
+  /** 수정 일시 */
+  updated_at: string
   /** 참석 인원 수 */
   attendingCount: number
   /** 불참 인원 수 */

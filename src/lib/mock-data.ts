@@ -110,7 +110,7 @@ export function mockEventMember(
   const statusOptions = [
     AttendanceStatus.ATTENDING,
     AttendanceStatus.NOT_ATTENDING,
-    AttendanceStatus.UNDECIDED,
+    AttendanceStatus.PENDING,
   ]
 
   const baseSeed = seed || Date.now()
@@ -296,7 +296,7 @@ export function createMembersWithStatuses(
       mockEventMember(
         {
           eventId,
-          status: AttendanceStatus.UNDECIDED,
+          status: AttendanceStatus.PENDING,
         },
         seed,
         memberIndex++

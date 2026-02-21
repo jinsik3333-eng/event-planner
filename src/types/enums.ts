@@ -12,14 +12,15 @@ export enum EventStatus {
 
 /**
  * 참석 상태 열거형
- * - 참석: 이벤트에 참석
- * - 불참: 이벤트에 불참
- * - 미정: 아직 참석 여부 미정
+ * 데이터베이스의 status 컬럼 값과 일치
+ * - ATTENDING: 이벤트에 참석
+ * - NOT_ATTENDING: 이벤트에 불참
+ * - PENDING: 아직 참석 여부 미정
  */
 export enum AttendanceStatus {
-  ATTENDING = '참석',
-  NOT_ATTENDING = '불참',
-  UNDECIDED = '미정',
+  ATTENDING = 'ATTENDING',
+  NOT_ATTENDING = 'NOT_ATTENDING',
+  PENDING = 'PENDING',
 }
 
 /**
