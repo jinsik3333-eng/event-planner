@@ -1,6 +1,7 @@
 'use server'
 
 import { nanoid } from 'nanoid'
+import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import { createEventSchema, updateEventSchema } from '@/types/schemas'
 import {
@@ -20,7 +21,7 @@ type Event = Database['public']['Tables']['events']['Row']
  */
 export async function createEvent(
   hostId: string,
-  data: CreateEventRequest,
+  data: CreateEventRequest
 ): Promise<ApiResponse<Event>> {
   try {
     // 입력값 검증
@@ -57,6 +58,9 @@ export async function createEvent(
       }
     }
 
+    // 대시보드 캐시 무효화 (새 이벤트 생성 후 목록 갱신)
+    revalidatePath('/dashboard')
+
     return {
       success: true,
       data: event,
@@ -80,7 +84,7 @@ export async function createEvent(
  * RLS 정책에 의해 자동으로 권한 검증됨
  */
 export async function getEvent(
-  eventId: string,
+  eventId: string
 ): Promise<ApiResponse<GetEventResponse>> {
   try {
     // 이벤트 기본 정보 조회
@@ -117,17 +121,14 @@ export async function getEvent(
     }
 
     // 통계 계산
-    const attendingCount = members?.filter(
-      (m) => m.status === 'ATTENDING',
-    ).length || 0
-    const notAttendingCount = members?.filter(
-      (m) => m.status === 'NOT_ATTENDING',
-    ).length || 0
-    const undecidedCount = members?.filter(
-      (m) => m.status === 'PENDING',
-    ).length || 0
-    const paidCount = members?.filter((m) => m.has_paid).length || 0
-    const unpaidCount = members?.filter((m) => !m.has_paid).length || 0
+    const attendingCount =
+      members?.filter(m => m.status === 'ATTENDING').length || 0
+    const notAttendingCount =
+      members?.filter(m => m.status === 'NOT_ATTENDING').length || 0
+    const undecidedCount =
+      members?.filter(m => m.status === 'PENDING').length || 0
+    const paidCount = members?.filter(m => m.has_paid).length || 0
+    const unpaidCount = members?.filter(m => !m.has_paid).length || 0
 
     return {
       success: true,
@@ -160,7 +161,7 @@ export async function getEvent(
  */
 export async function updateEvent(
   eventId: string,
-  data: UpdateEventRequest,
+  data: UpdateEventRequest
 ): Promise<ApiResponse<Event>> {
   try {
     // ID 제거 후 검증
@@ -272,9 +273,7 @@ export async function deleteEvent(eventId: string): Promise<ApiResponse<null>> {
 /**
  * 사용자가 주최 또는 참여 중인 모임 목록 조회
  */
-export async function listUserEvents(
-  userId: string,
-): Promise<
+export async function listUserEvents(userId: string): Promise<
   ApiResponse<{
     hosted: Event[]
     participating: Event[]
@@ -308,9 +307,8 @@ export async function listUserEvents(
       }
     }
 
-    const participatingEventIds = participatingMembers?.map(
-      (m) => m.event_id,
-    ) || []
+    const participatingEventIds =
+      participatingMembers?.map(m => m.event_id) || []
 
     let participatingEvents: Event[] = []
     if (participatingEventIds.length > 0) {
@@ -356,7 +354,7 @@ export async function listUserEvents(
  * 게스트도 접근 가능 (로그인 불필요)
  */
 export async function getEventByInviteCode(
-  inviteCode: string,
+  inviteCode: string
 ): Promise<ApiResponse<GetEventResponse>> {
   try {
     // 초대코드로 이벤트 조회
@@ -393,17 +391,14 @@ export async function getEventByInviteCode(
     }
 
     // 통계 계산
-    const attendingCount = members?.filter(
-      (m) => m.status === 'ATTENDING',
-    ).length || 0
-    const notAttendingCount = members?.filter(
-      (m) => m.status === 'NOT_ATTENDING',
-    ).length || 0
-    const undecidedCount = members?.filter(
-      (m) => m.status === 'PENDING',
-    ).length || 0
-    const paidCount = members?.filter((m) => m.has_paid).length || 0
-    const unpaidCount = members?.filter((m) => !m.has_paid).length || 0
+    const attendingCount =
+      members?.filter(m => m.status === 'ATTENDING').length || 0
+    const notAttendingCount =
+      members?.filter(m => m.status === 'NOT_ATTENDING').length || 0
+    const undecidedCount =
+      members?.filter(m => m.status === 'PENDING').length || 0
+    const paidCount = members?.filter(m => m.has_paid).length || 0
+    const unpaidCount = members?.filter(m => !m.has_paid).length || 0
 
     return {
       success: true,

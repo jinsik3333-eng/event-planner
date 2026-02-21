@@ -93,7 +93,9 @@ export function CreateEventForm({ onSubmit, isLoading }: CreateEventFormProps) {
               step="1800"
               {...register('date')}
             />
-            <p className="text-xs text-muted-foreground">시간은 30분 단위로 선택됩니다</p>
+            <p className="text-muted-foreground text-xs">
+              시간은 30분 단위로 선택됩니다
+            </p>
             {errors.date && <FormError error={errors.date} />}
           </div>
 

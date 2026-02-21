@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import {
@@ -24,7 +25,16 @@ import { BottomTab } from '@/components/navigation/bottom-tab'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
-import { CarpoolForm } from '@/components/forms/carpool-form'
+import dynamic from 'next/dynamic'
+
+// 카풀 탭에서만 필요한 폼 — lazy loading으로 초기 번들 분리
+const CarpoolForm = dynamic(
+  () => import('@/components/forms/carpool-form').then(mod => mod.CarpoolForm),
+  {
+    loading: () => <Skeleton className="h-32 w-full rounded-lg" />,
+    ssr: false,
+  }
+)
 import { ErrorState } from '@/components/state/error-state'
 import { EmptyState } from '@/components/state/empty-state'
 import { calculatePricePerPerson } from '@/lib/calculation'
@@ -282,14 +292,18 @@ export default function ManagePage() {
         <Card>
           <CardContent className="space-y-4 p-4">
             {/* 이미지 */}
-            <img
-              src={
-                event.image ||
-                'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop'
-              }
-              alt={event.title}
-              className="h-32 w-full rounded-lg object-cover"
-            />
+            <div className="relative h-32 w-full overflow-hidden rounded-lg">
+              <Image
+                src={
+                  event.image ||
+                  'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop'
+                }
+                alt={event.title}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
 
             {/* 제목 및 상태 */}
             <div className="space-y-2">

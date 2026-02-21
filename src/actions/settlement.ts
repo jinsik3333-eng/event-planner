@@ -1,6 +1,7 @@
 'use server'
 
 import { getServerSession } from 'next-auth'
+import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import { calculatePricePerPerson } from '@/lib/calculation'
 import { UpdatePaymentStatusRequest, ApiResponse } from '@/types/api'
@@ -177,6 +178,9 @@ export async function updatePaymentStatus(
         error: `납부 상태 업데이트에 실패했습니다: ${error.message}`,
       }
     }
+
+    // 관리 페이지 캐시 무효화 (납부 상태 변경 후 즉시 반영)
+    revalidatePath(`/events/${data.eventId}/manage`)
 
     return {
       success: true,

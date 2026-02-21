@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { MapPin, Clock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -221,14 +222,16 @@ export default function JoinPage() {
       {step === 'info' && (
         <div className="space-y-6">
           {/* 이벤트 이미지 및 제목 */}
-          <div>
-            <img
+          <div className="relative h-48 w-full overflow-hidden">
+            <Image
               src={
                 event.image ||
                 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop'
               }
               alt={event.title}
-              className="h-48 w-full object-cover"
+              fill
+              className="object-cover"
+              priority
             />
           </div>
 

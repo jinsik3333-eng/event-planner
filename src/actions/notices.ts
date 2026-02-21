@@ -1,6 +1,7 @@
 'use server'
 
 import { getServerSession } from 'next-auth'
+import { revalidatePath } from 'next/cache'
 import { supabase } from '@/lib/supabase'
 import {
   CreateNoticeRequest,
@@ -62,6 +63,9 @@ export async function createNotice(
         error: `공지사항 생성에 실패했습니다: ${error.message}`,
       }
     }
+
+    // 관리 페이지 캐시 무효화 (공지 작성 후 즉시 반영)
+    revalidatePath(`/events/${data.eventId}/manage`)
 
     return {
       success: true,
@@ -220,6 +224,9 @@ export async function deleteNotice(
         error: `공지사항 삭제에 실패했습니다: ${error.message}`,
       }
     }
+
+    // 관리 페이지 캐시 무효화 (공지 삭제 후 즉시 반영)
+    revalidatePath(`/events/${notice.event_id}/manage`)
 
     return {
       success: true,

@@ -44,7 +44,9 @@ export function SignupForm() {
       router.push('/login')
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : '회원가입 중 오류가 발생했습니다'
+        error instanceof Error
+          ? error.message
+          : '회원가입 중 오류가 발생했습니다'
       setServerError(errorMessage)
       toast.error(errorMessage)
     }
@@ -57,7 +59,7 @@ export function SignupForm() {
       </CardHeader>
       <CardContent className="space-y-4">
         {serverError && (
-          <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+          <div className="bg-destructive/15 text-destructive rounded-md p-3 text-sm">
             {serverError}
           </div>
         )}
