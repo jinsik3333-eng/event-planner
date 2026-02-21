@@ -23,7 +23,10 @@ import { Container } from '@/components/layout/container'
 import { BottomTab } from '@/components/navigation/bottom-tab'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { CarpoolForm } from '@/components/forms/carpool-form'
+import { ErrorState } from '@/components/state/error-state'
+import { EmptyState } from '@/components/state/empty-state'
 import { calculatePricePerPerson } from '@/lib/calculation'
 import { getEvent } from '@/actions/events'
 import { getEventMembers } from '@/actions/attendance'
@@ -193,16 +196,39 @@ export default function ManagePage() {
     m => m.status === 'NOT_ATTENDING'
   ).length
 
-  // 로딩 상태
+  // 로딩 상태 - Skeleton 카드로 실제 레이아웃과 유사하게
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pb-20 dark:bg-gray-950">
         <ManagePageHeader />
-        <Container className="mt-8 space-y-4">
-          <div className="h-40 animate-pulse rounded-lg bg-gray-200" />
+        <Container className="mt-4 space-y-4 py-4">
+          {/* 이벤트 정보 카드 스켈레톤 */}
+          <Card>
+            <CardContent className="space-y-4 p-4">
+              <Skeleton className="h-32 w-full rounded-lg" />
+              <Skeleton className="h-6 w-3/4" />
+              <div className="space-y-2 border-t border-b border-gray-100 py-4">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Skeleton className="h-16 rounded-lg" />
+                <Skeleton className="h-16 rounded-lg" />
+                <Skeleton className="h-16 rounded-lg" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-9 flex-1 rounded-md" />
+                <Skeleton className="h-9 flex-1 rounded-md" />
+              </div>
+            </CardContent>
+          </Card>
+          {/* 탭 스켈레톤 */}
+          <Skeleton className="h-10 w-full rounded-lg" />
+          {/* 탭 콘텐츠 스켈레톤 */}
           <div className="space-y-3">
-            <div className="h-6 w-3/4 animate-pulse rounded bg-gray-200" />
-            <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+            <Skeleton className="h-20 w-full rounded-lg" />
+            <Skeleton className="h-20 w-full rounded-lg" />
           </div>
         </Container>
       </div>
@@ -215,20 +241,13 @@ export default function ManagePage() {
       <div className="min-h-screen bg-gray-50 pb-20 dark:bg-gray-950">
         <ManagePageHeader />
         <Container className="mt-8">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6 dark:border-red-900 dark:bg-red-950">
-            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">
-              오류가 발생했습니다
-            </h2>
-            <p className="mt-2 text-sm text-red-800">
-              {error || '이벤트를 찾을 수 없습니다.'}
-            </p>
-          </div>
-          <Button
-            onClick={() => router.back()}
-            className="mt-4 h-12 w-full bg-gray-600 font-bold text-white hover:bg-gray-700"
-          >
-            뒤로가기
-          </Button>
+          <ErrorState
+            message={error || '이벤트를 찾을 수 없습니다.'}
+            action={{
+              label: '뒤로가기',
+              onClick: () => router.back(),
+            }}
+          />
         </Container>
       </div>
     )
@@ -351,10 +370,11 @@ export default function ManagePage() {
           {/* 참여자 탭 */}
           <TabsContent value="members" className="mt-4 space-y-4">
             {members.length === 0 ? (
-              <div className="py-12 text-center">
-                <Users size={48} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-600">아직 참여자가 없습니다.</p>
-              </div>
+              <EmptyState
+                icon={<Users size={48} className="text-gray-300" />}
+                title="아직 참여자가 없습니다"
+                description="초대 링크를 공유하여 참여자를 초대해보세요."
+              />
             ) : (
               members.map(member => (
                 <Card key={member.id}>
@@ -463,9 +483,9 @@ export default function ManagePage() {
                         if (kakaoPayLink && event) {
                           try {
                             await navigator.clipboard.writeText(kakaoPayLink)
-                            alert('링크가 복사되었습니다.')
+                            toast.success('카카오페이 링크가 복사되었습니다.')
                           } catch {
-                            alert('복사에 실패했습니다.')
+                            toast.error('링크 복사에 실패했습니다.')
                           }
                         }
                       }}
@@ -531,14 +551,14 @@ export default function ManagePage() {
                                       : m
                                   )
                                 )
-                                alert('납부 상태가 업데이트되었습니다.')
+                                toast.success('납부 상태가 업데이트되었습니다.')
                               } else {
-                                alert(
+                                toast.error(
                                   result.error || '업데이트에 실패했습니다.'
                                 )
                               }
                             } catch (err) {
-                              alert(
+                              toast.error(
                                 err instanceof Error
                                   ? err.message
                                   : '오류가 발생했습니다.'
@@ -579,12 +599,12 @@ export default function ManagePage() {
                       { ...result.data, acceptedCount: 0 },
                       ...carpools,
                     ])
-                    alert('카풀이 등록되었습니다.')
+                    toast.success('카풀이 등록되었습니다.')
                   } else {
-                    alert(result.error || '등록에 실패했습니다.')
+                    toast.error(result.error || '등록에 실패했습니다.')
                   }
                 } catch (err) {
-                  alert(
+                  toast.error(
                     err instanceof Error ? err.message : '오류가 발생했습니다.'
                   )
                 } finally {
@@ -596,10 +616,11 @@ export default function ManagePage() {
 
             {/* 카풀 목록 */}
             {carpools.length === 0 ? (
-              <div className="py-8 text-center">
-                <Users size={40} className="mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-600">아직 등록된 카풀이 없습니다.</p>
-              </div>
+              <EmptyState
+                icon={<Users size={40} className="text-gray-300" />}
+                title="등록된 카풀이 없습니다"
+                description="위 양식으로 카풀을 등록하면 탑승 신청이 가능합니다."
+              />
             ) : (
               carpools.map(carpool => (
                 <Card key={carpool.id}>
@@ -648,12 +669,14 @@ export default function ManagePage() {
                             })
                             // 서버에서 사용자 인증을 검증합니다
                             if (result.success) {
-                              alert('카풀 신청이 완료되었습니다.')
+                              toast.success('카풀 신청이 완료되었습니다.')
                             } else {
-                              alert(result.error || '신청에 실패했습니다.')
+                              toast.error(
+                                result.error || '신청에 실패했습니다.'
+                              )
                             }
                           } catch (err) {
-                            alert(
+                            toast.error(
                               err instanceof Error
                                 ? err.message
                                 : '오류가 발생했습니다.'
@@ -715,12 +738,12 @@ export default function ManagePage() {
                       if (result.success && result.data) {
                         setNotices([result.data, ...notices])
                         setNoticeContent('')
-                        alert('공지사항이 작성되었습니다.')
+                        toast.success('공지사항이 작성되었습니다.')
                       } else {
-                        alert(result.error || '작성에 실패했습니다.')
+                        toast.error(result.error || '작성에 실패했습니다.')
                       }
                     } catch (err) {
-                      alert(
+                      toast.error(
                         err instanceof Error
                           ? err.message
                           : '오류가 발생했습니다.'
@@ -739,13 +762,11 @@ export default function ManagePage() {
 
             {/* 공지사항 목록 */}
             {notices.length === 0 ? (
-              <div className="py-8 text-center">
-                <MessageCircle
-                  size={40}
-                  className="mx-auto mb-3 text-gray-300"
-                />
-                <p className="text-gray-600">아직 공지사항이 없습니다.</p>
-              </div>
+              <EmptyState
+                icon={<MessageCircle size={40} className="text-gray-300" />}
+                title="아직 공지사항이 없습니다"
+                description="참석자들에게 전달할 공지사항을 작성해보세요."
+              />
             ) : (
               notices.map(notice => (
                 <Card key={notice.id}>

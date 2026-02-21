@@ -6,7 +6,10 @@ import { MapPin, Clock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Container } from '@/components/layout/container'
+import { ErrorState } from '@/components/state/error-state'
+import { toast } from 'sonner'
 import { getEventByInviteCode } from '@/actions/events'
 import { createEventMember } from '@/actions/attendance'
 import type { GetEventResponse } from '@/types/api'
@@ -70,17 +73,17 @@ export default function JoinPage() {
 
   const handleConfirm = async () => {
     if (attendance === 'attending' && !guestName) {
-      alert('이름을 입력해주세요')
+      toast.error('이름을 입력해주세요.')
       return
     }
 
     if (!event) {
-      alert('이벤트 정보를 불러오는 중입니다.')
+      toast.error('이벤트 정보를 불러오는 중입니다.')
       return
     }
 
     if (!attendance) {
-      alert('참석 의사를 선택해주세요.')
+      toast.error('참석 의사를 선택해주세요.')
       return
     }
 
@@ -104,7 +107,7 @@ export default function JoinPage() {
       })
 
       if (!response.success) {
-        alert(response.error || '참여 등록에 실패했습니다.')
+        toast.error(response.error || '참여 등록에 실패했습니다.')
         return
       }
 
@@ -112,44 +115,81 @@ export default function JoinPage() {
     } catch (err) {
       const message =
         err instanceof Error ? err.message : '참여 등록에 실패했습니다.'
-      alert(message)
+      toast.error(message)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // 로딩 상태
+  // 공통 헤더 - 모든 상태에서 표시
+  const PageHeader = () => (
+    <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
+      <Container className="py-3">
+        <button
+          className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
+          onClick={() => router.back()}
+          aria-label="뒤로가기"
+        >
+          <svg
+            className="h-6 w-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+      </Container>
+    </div>
+  )
+
+  // 로딩 상태 - Skeleton으로 실제 레이아웃 예고
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white pb-4">
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
-          <Container className="py-3">
-            <button
-              className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
-              onClick={() => router.back()}
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          </Container>
-        </div>
-        <Container className="mt-8 space-y-4">
-          <div className="h-48 animate-pulse rounded-lg bg-gray-200" />
-          <div className="space-y-3">
-            <div className="h-8 w-3/4 animate-pulse rounded bg-gray-200" />
-            <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
-            <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
+        <PageHeader />
+        {/* 이미지 스켈레톤 */}
+        <Skeleton className="h-48 w-full rounded-none" />
+        <Container className="mt-4 space-y-4">
+          {/* 제목/배지 스켈레톤 */}
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-3/4" />
+            <div className="flex gap-2">
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton className="h-5 w-20" />
+            </div>
+          </div>
+          {/* 메타 정보 스켈레톤 */}
+          <div className="space-y-3 border-t border-b border-gray-200 py-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded" />
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-28" />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-5 w-5 rounded" />
+              <div className="space-y-1">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+            </div>
+          </div>
+          {/* 참석 버튼 스켈레톤 */}
+          <div className="grid grid-cols-3 gap-3 pt-4">
+            <Skeleton className="h-10 rounded-md" />
+            <Skeleton className="h-10 rounded-md" />
+            <Skeleton className="h-10 rounded-md" />
           </div>
         </Container>
       </div>
@@ -160,43 +200,15 @@ export default function JoinPage() {
   if (error || !event) {
     return (
       <div className="min-h-screen bg-white pb-4">
-        <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
-          <Container className="py-3">
-            <button
-              className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
-              onClick={() => router.back()}
-            >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          </Container>
-        </div>
-        <Container className="mt-8 space-y-4">
-          <div className="rounded-lg border border-red-200 bg-red-50 p-6">
-            <h2 className="text-lg font-bold text-red-900">
-              오류가 발생했습니다
-            </h2>
-            <p className="mt-2 text-sm text-red-800">
-              {error || '이벤트를 찾을 수 없습니다.'}
-            </p>
-          </div>
-          <Button
-            onClick={() => router.back()}
-            className="h-12 w-full bg-gray-600 font-bold text-white hover:bg-gray-700"
-          >
-            뒤로가기
-          </Button>
+        <PageHeader />
+        <Container className="mt-8">
+          <ErrorState
+            message={error || '초대 링크가 유효하지 않거나 만료되었습니다.'}
+            action={{
+              label: '뒤로가기',
+              onClick: () => router.back(),
+            }}
+          />
         </Container>
       </div>
     )
@@ -204,29 +216,7 @@ export default function JoinPage() {
 
   return (
     <div className="min-h-screen bg-white pb-4">
-      {/* 뒤로가기 */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white">
-        <Container className="py-3">
-          <button
-            className="-ml-2 rounded-lg p-2 hover:bg-gray-100"
-            onClick={() => router.back()}
-          >
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-        </Container>
-      </div>
+      <PageHeader />
 
       {step === 'info' && (
         <div className="space-y-6">

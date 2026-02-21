@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { loginSchema, type LoginFormData } from '@/types'
 import { FormError } from './forms/form-error'
+import { toast } from 'sonner'
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -44,7 +45,8 @@ export function LoginForm() {
   // 폼 필드 값 감시
   const email = watch('email')
   const password = watch('password')
-  const isFormValid = email && password && email.length > 0 && password.length > 0
+  const isFormValid =
+    email && password && email.length > 0 && password.length > 0
 
   const onSubmit = async (data: LoginFormData) => {
     setLoginError(null)
@@ -56,14 +58,19 @@ export function LoginForm() {
       })
 
       if (!result?.ok) {
-        setLoginError('이메일 또는 비밀번호가 올바르지 않습니다')
+        const message = '이메일 또는 비밀번호가 올바르지 않습니다'
+        setLoginError(message)
+        toast.error(message)
         return
       }
 
       // 로그인 성공
+      toast.success('로그인되었습니다!')
       window.location.href = '/dashboard'
     } catch (error) {
-      setLoginError('로그인 중 오류가 발생했습니다')
+      const message = '로그인 중 오류가 발생했습니다'
+      setLoginError(message)
+      toast.error(message)
       console.error('Login error:', error)
     }
   }
@@ -90,7 +97,7 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         {loginError && (
-          <div className="mb-4 rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+          <div className="bg-destructive/15 text-destructive mb-4 rounded-md p-3 text-sm">
             {loginError}
           </div>
         )}

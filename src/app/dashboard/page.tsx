@@ -10,6 +10,10 @@ import { BottomTab } from '@/components/navigation/bottom-tab'
 import { Container } from '@/components/layout/container'
 import { listUserEvents } from '@/actions/events'
 import { Database } from '@/lib/supabase'
+import { EventCardSkeleton } from '@/components/event/event-card-skeleton'
+import { ErrorState } from '@/components/state/error-state'
+import { EmptyState } from '@/components/state/empty-state'
+import { Skeleton } from '@/components/ui/skeleton'
 
 type Event = Database['public']['Tables']['events']['Row']
 
@@ -139,95 +143,101 @@ export default function DashboardPage() {
 
       {/* 컨텐츠 */}
       <Container className="space-y-6 py-6">
-        {/* 에러 메시지 */}
-        {error && (
-          <div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        {/* 로딩 상태 */}
+        {/* 로딩 스켈레톤 */}
         {isLoading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center text-gray-600">
-              <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-emerald-600"></div>
-              <p>모임 목록을 불러오는 중입니다...</p>
-            </div>
-          </div>
-        )}
-
-        {/* CTA 버튼 */}
-        {!isLoading && (
-          <Link href="/events/new">
-            <Button className="h-12 w-full bg-emerald-600 text-base font-bold text-white hover:bg-emerald-700">
-              <Plus size={20} className="mr-2" />새 모임 만들기
-            </Button>
-          </Link>
-        )}
-
-        {/* 주최 중인 모임 */}
-        {!isLoading && (
-          <section>
-            <h2 className="mb-4 text-base font-bold text-gray-900">
-              주최 중인 모임
-            </h2>
+          <>
+            <Skeleton className="h-12 w-full rounded-lg" />
             <div className="space-y-4">
-              {myEvents.filter(e => e.status !== 'ENDED').length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 py-12">
-                  <p className="text-gray-600">아직 생성한 모임이 없습니다.</p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    위의 버튼을 눌러 새 모임을 만들어보세요.
-                  </p>
-                </div>
-              ) : (
-                myEvents
-                  .filter(e => e.status !== 'ENDED')
-                  .map(event => (
-                    <Link key={event.id} href={`/events/${event.id}/manage`}>
-                      <EventCard {...event} />
-                    </Link>
-                  ))
-              )}
+              <EventCardSkeleton />
+              <EventCardSkeleton />
+              <EventCardSkeleton />
             </div>
-          </section>
+          </>
         )}
 
-        {/* 참여 중인 모임 */}
-        {!isLoading && participatingEvents.length > 0 && (
-          <section>
-            <h2 className="mb-4 text-base font-bold text-gray-900">
-              참여 중인 모임
-            </h2>
-            <div className="space-y-4">
-              {participatingEvents
-                .filter(e => e.status !== 'ENDED')
-                .map(event => (
-                  <Link key={event.id} href={`/events/${event.id}`}>
-                    <EventCard {...event} />
-                  </Link>
-                ))}
-            </div>
-          </section>
+        {/* 에러 상태 */}
+        {!isLoading && error && (
+          <ErrorState
+            message={error}
+            action={{
+              label: '다시 시도',
+              onClick: () => session?.user?.id && loadEvents(session.user.id),
+            }}
+          />
         )}
 
-        {/* 지난 모임 */}
-        {!isLoading &&
-          myEvents.filter(e => e.status === 'ENDED').length > 0 && (
+        {/* 정상 콘텐츠 */}
+        {!isLoading && !error && (
+          <>
+            {/* CTA 버튼 */}
+            <Link href="/events/new">
+              <Button className="h-12 w-full bg-emerald-600 text-base font-bold text-white hover:bg-emerald-700">
+                <Plus size={20} className="mr-2" />새 모임 만들기
+              </Button>
+            </Link>
+
+            {/* 주최 중인 모임 */}
             <section>
               <h2 className="mb-4 text-base font-bold text-gray-900">
-                지난 모임
+                주최 중인 모임
               </h2>
-              <div className="space-y-4">
-                {myEvents
-                  .filter(e => e.status === 'ENDED')
-                  .map(event => (
-                    <Link key={event.id} href={`/events/${event.id}`}>
-                      <EventCard {...event} />
-                    </Link>
-                  ))}
-              </div>
+              {myEvents.filter(e => e.status !== 'ENDED').length === 0 ? (
+                <EmptyState
+                  icon="📅"
+                  title="아직 생성한 모임이 없습니다"
+                  description="새 모임 만들기 버튼을 눌러 첫 모임을 만들어보세요."
+                />
+              ) : (
+                <div className="space-y-4">
+                  {myEvents
+                    .filter(e => e.status !== 'ENDED')
+                    .map(event => (
+                      <Link key={event.id} href={`/events/${event.id}/manage`}>
+                        <EventCard {...event} />
+                      </Link>
+                    ))}
+                </div>
+              )}
             </section>
-          )}
+
+            {/* 참여 중인 모임 */}
+            {participatingEvents.filter(e => e.status !== 'ENDED').length >
+              0 && (
+              <section>
+                <h2 className="mb-4 text-base font-bold text-gray-900">
+                  참여 중인 모임
+                </h2>
+                <div className="space-y-4">
+                  {participatingEvents
+                    .filter(e => e.status !== 'ENDED')
+                    .map(event => (
+                      <Link key={event.id} href={`/events/${event.id}`}>
+                        <EventCard {...event} />
+                      </Link>
+                    ))}
+                </div>
+              </section>
+            )}
+
+            {/* 지난 모임 */}
+            {myEvents.filter(e => e.status === 'ENDED').length > 0 && (
+              <section>
+                <h2 className="mb-4 text-base font-bold text-gray-900">
+                  지난 모임
+                </h2>
+                <div className="space-y-4">
+                  {myEvents
+                    .filter(e => e.status === 'ENDED')
+                    .map(event => (
+                      <Link key={event.id} href={`/events/${event.id}`}>
+                        <EventCard {...event} />
+                      </Link>
+                    ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
       </Container>
 
       {/* 하단 탭 네비게이션 */}
